@@ -34,3 +34,5 @@ src/_version.py
 # OS files
 .DS_Store
 Thumbs.db
+.ruff_cache/
+.vscode/

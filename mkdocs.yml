@@ -1,0 +1,63 @@
+site_name: Simple ETL Dashboard
+site_description: Comprehensive documentation for Simple ETL Dashboard
+site_author: Your Name
+site_url: https://yourusername.github.io/simple-etl-dashboard/
+
+repo_name: yourusername/simple-etl-dashboard
+repo_url: https://github.com/yourusername/simple-etl-dashboard
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - Installation: installation.md
+      - Usage: usage.md
+      - Configuration: configuration.md
+  - Developer Guide:
+      - Development Setup: development/setup.md
+      - Architecture: development/architecture.md
+      - Contributing: development/contributing.md
+  - API Reference:
+      - Data Processing: api/data.md
+      - Authentication: api/auth.md
+      - Dashboard: api/dashboard.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details

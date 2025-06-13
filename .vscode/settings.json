@@ -5,7 +5,8 @@
     "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
     "python.terminal.activateEnvironment": true,
     "files.associations": {
-        "*.toml": "toml"
+        "*.toml": "toml",
+        "*.todo": "todo"
     },
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
@@ -15,5 +16,44 @@
         }
     },
     "autoDocstring.docstringFormat": "google",
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    // ✨ Todo+ Configuration
+    "todo.file.name": "projects.todo",
+    "todo.file.defaultContent": "\nindosat_salesdashboard:\n\n  preparation-phase:\n    ☐ New task\n",
+    // Symbols & Colors
+    "todo.symbols.box": "☐",
+    "todo.symbols.done": "✔",
+    "todo.symbols.cancelled": "✘",
+    // Colors (sesuai tema development)
+    "todo.colors.done": "#4CAF50",
+    "todo.colors.cancelled": "#F44336",
+    "todo.colors.project": "#2196F3",
+    "todo.colors.tag": "#FF9800",
+    // Special tags configuration
+    "todo.tags.names": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "today",
+        "next",
+        "waiting"
+    ],
+    "todo.tags.namesInference": true,
+    // Timekeeping (perfect untuk solo dev!)
+    "todo.timekeeping.created.enabled": false,
+    "todo.timekeeping.finished.enabled": true,
+    "todo.timekeeping.finished.time": true,
+    "todo.timekeeping.finished.format": "YY-MM-DD HH:mm",
+    "todo.timekeeping.elapsed.enabled": true,
+    // Statistics (helpful untuk progress tracking)
+    "todo.statistics.project.enabled": true,
+    "todo.statistics.project.text": "([pending]/[all]) [percentage]%",
+    "todo.statistics.statusbar.enabled": true,
+    "todo.statistics.statusbar.text": "📋 [finished]/[all] ([percentage]%)",
+    "todo.statistics.statusbar.tooltip": "[pending] Pending - [done] Done - [cancelled] Cancelled",
+    // Archive configuration
+    "todo.archive.name": "Archive",
+    "todo.archive.remove.emptyProjects": true,
+    "todo.archive.sortByDate": true
 }

@@ -2,4 +2,10 @@ indosat_salesdashboard:
 
   preparation-phase:
     ✔ make a project with uv @done(25-06-13 12:55)
-    ☐ menentukan library yang akan di gunakan
+    ✔ menentukan library yang akan di gunakan @done(25-06-13 20:00)
+    ✔ Setup Pyproject.
+    ✔ Setup Git @done(25-06-13 20:00)
+    ✔ Setup Virtual Environment @done(25-06-13 20:00)
+    ✔ Setup Repository @done(25-06-13 20:00)
+    ✔ Setup Pre-commit @done(25-06-13 20:00)
+    ☐ setup mkdocs @todo(25-06-13 20:00) @low
