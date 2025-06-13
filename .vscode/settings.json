@@ -8,6 +8,10 @@
         "*.toml": "toml",
         "*.todo": "todo"
     },
+    "ruff.path": [
+        "./venv/Scripts/ruff.exe",
+        "./venv/bin/ruff"
+    ],
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.codeActionsOnSave": {
@@ -16,7 +20,7 @@
         }
     },
     "autoDocstring.docstringFormat": "google",
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "standard",
     // ✨ Todo+ Configuration
     "todo.file.name": "projects.todo",
     "todo.file.defaultContent": "\nindosat_salesdashboard:\n\n  preparation-phase:\n    ☐ New task\n",

@@ -36,3 +36,6 @@ src/_version.py
 Thumbs.db
 .ruff_cache/
 .vscode/
+
+*.log
+*.logs

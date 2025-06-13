@@ -1,0 +1,6 @@
+project {simple-dashboard}
+
+
+Table {
+    user
+}
