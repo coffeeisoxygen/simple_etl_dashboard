@@ -15,11 +15,14 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8.3",
+    "detect-secrets>=1.5.0",
     "pre-commit>=4.2.0",
     "pytest>=8.4.0",
     "pytest-cov>=6.2.1",
     "pytest-html>=4.1.1",
     "pytest-mock>=3.14.1",
+    "ruff>=0.11.13",
 ]
 [build-system]
 requires = ["setuptools", "setuptools-scm", "wheel"]
@@ -52,8 +55,8 @@ omit = [
     "*/shibokensupport/*",
     "*/pyscript/*",
     "*/signature_bootstrap.py",
-    "src/__init__.py",          # ✅ Exclude init files
-    "src/_version.py",          # ✅ Exclude version file
+    "src/__init__.py",
+    "src/_version.py",
 ]
 
 [tool.coverage.report]
@@ -79,7 +82,7 @@ testpaths = ["tests"] # Only scan tests directory
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-pythonpath = ["src"] # Add src to Python path for imports
+pythonpath = ["src"]
 addopts = [
     "-v",
     "--strict-markers",
@@ -94,13 +97,6 @@ addopts = [
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "config: Configuration system tests",
-    "path_resolver: Path resolution tests",
-    "settings: Settings management tests",
-    "temp_files: Tests involving temporary files",
-    "windows_paths: Windows-specific path tests",
-    "unit: Unit tests",
-    "integration: Integration tests",
-    "e2e: End-to-end tests",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
