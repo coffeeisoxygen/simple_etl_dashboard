@@ -135,5 +135,9 @@ exclude: |
     build/.*|
     .*\.egg-info/.*|
     \.secrets\.baseline|
-    projects.todo/
+    projects\.todo/.*|
+    \.vscode/.*|
+    \.idea/.*|
+    \.pytest_cache/.*|
+    __pycache__/.*
   )$
