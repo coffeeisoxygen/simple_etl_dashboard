@@ -1,6 +1,19 @@
 {
     "conventionalCommits.scopes": [
-        "First Commit - Janji G bakalan over enginering , beneran ",
         "projects"
     ],
+    "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+    "files.associations": {
+        "*.toml": "toml"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit",
+            "source.fixAll": "explicit"
+        }
+    },
+    "autoDocstring.docstringFormat": "google",
+    "python.analysis.typeCheckingMode": "basic"
 }

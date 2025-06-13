@@ -2,7 +2,7 @@ import io
 import os
 import sqlite3
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pandas as pd
 import streamlit as st
@@ -37,7 +37,7 @@ logger.info(f"Module imported - Loguru configured (Init count: {_loguru_init_cou
 # ETL Functions
 @st.cache_data
 def process_uploaded_file(file_content: bytes, filename: str) -> pd.DataFrame:
-    """ETL processing untuk file yang diupload"""
+    """ETL processing untuk file yang diupload."""
     logger.info(f"Processing uploaded file: {filename}")
 
     try:
@@ -64,7 +64,7 @@ def process_uploaded_file(file_content: bytes, filename: str) -> pd.DataFrame:
 
 
 def transform_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Transform dan clean data"""
+    """Transform dan clean data."""
     logger.info("Starting data transformation")
 
     df_clean = df.copy()
@@ -95,8 +95,8 @@ def transform_data(df: pd.DataFrame) -> pd.DataFrame:
     return df_clean
 
 
-def save_to_database(df: pd.DataFrame, table_name: str = "etl_data"):
-    """Save processed data ke database"""
+def save_to_database(df: pd.DataFrame, table_name: str = "etl_data") -> bool | None:
+    """Save processed data ke database."""
     if df.empty:
         return False
 
@@ -117,8 +117,8 @@ def save_to_database(df: pd.DataFrame, table_name: str = "etl_data"):
 
 
 @st.cache_data(ttl=300)  # Cache 5 menit
-def load_from_database(table_name: str = "etl_data", limit: int = 1000):
-    """Load data dari database when needed"""
+def load_from_database(table_name: str = "etl_data", limit: int = 1000):  # noqa: ANN201
+    """Load data dari database when needed."""
     try:
         conn = sqlite3.connect("data/etl_database.db")
 
@@ -139,7 +139,7 @@ def load_from_database(table_name: str = "etl_data", limit: int = 1000):
         return pd.DataFrame()
 
 
-def main():
+def main() -> None:
     logger.info("Main function called - App rerun started")
 
     # Tampilkan berapa kali loguru diinisialisasi
@@ -149,12 +149,14 @@ def main():
     st.header("📊 ETL Dashboard")
 
     # Tabs untuk organize fitur
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📤 Upload & ETL",
-        "🔗 Query Params",
-        "🔍 Context Info",
-        "📋 Data View",
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        [
+            "📤 Upload & ETL",
+            "🔗 Query Params",
+            "🔍 Context Info",
+            "📋 Data View",
+        ]
+    )
 
     with tab1:
         st.subheader("1. 📤 Upload Data")
@@ -345,13 +347,13 @@ def main():
             st.write(f"Timezone: `{st.context.timezone}`")
 
             try:
-                from datetime import datetime, timezone
+                from datetime import datetime
 
                 import pytz
 
                 timezone_str = st.context.timezone or "UTC"
                 tz = pytz.timezone(timezone_str)
-                utc_now = datetime.now(timezone.utc)
+                utc_now = datetime.now(UTC)
                 local_time = utc_now.astimezone(tz)
                 st.write(f"Local Time: `{local_time.strftime('%Y-%m-%d %H:%M:%S')}`")
             except Exception as e:
