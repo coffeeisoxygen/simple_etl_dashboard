@@ -8,3 +8,22 @@ wheels/
 
 # Virtual environments
 .venv
+
+# cache pytest
+.pytest_cache/
+
+.vscode/
+*.instructions.md
+*.prompt.md
+*.chatmode.md
+.streamlit/
+*.db
+
+# version generated
+src/_version.py
+
+# report folder and test folder
+.reports/
+
+# catatan selama masa pengembangan
+.notes/

@@ -1,5 +1,6 @@
 {
     "conventionalCommits.scopes": [
-        "First Commit - Janji G bakalan over enginering , beneran "
-    ]
+        "First Commit - Janji G bakalan over enginering , beneran ",
+        "projects"
+    ],
 }

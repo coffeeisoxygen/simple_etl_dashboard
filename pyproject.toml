@@ -1,7 +1,133 @@
 [project]
 name = "simple-etl-dashboard"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "bcrypt>=4.3.0",
+    "loguru>=0.7.3",
+    "pydantic>=2.11.5",
+    "python-dotenv>=1.1.0",
+    "sqlalchemy>=2.0.41",
+    "streamlit>=1.45.1",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.0",
+    "pytest-cov>=6.2.1",
+    "pytest-html>=4.1.1",
+    "pytest-mock>=3.14.1",
+]
+[build-system]
+requires = ["setuptools", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []            # Tidak ada single modules
+package-dir = { "" = "." }
+
+[tool.setuptools.packages.find]
+where = [""]
+
+[tool.setuptools_scm]
+write_to = "src/_version.py"
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
+fallback_version = "0.1.0"
+
+[tool.coverage.run]
+source = ["src"]
+data_file = ".reports/coverage/.coverage"
+omit = [
+    "*/tests/*",
+    "*/_version.py",
+    "*/scripts/*",
+    "*/__init__.py",
+    # "*/__main__.py",
+    "*/site-packages/*",
+    "*/.venv/*",
+    "*/shibokensupport/*",
+    "*/pyscript/*",
+    "*/signature_bootstrap.py",
+    "src/__init__.py",          # ✅ Exclude init files
+    "src/_version.py",          # ✅ Exclude version file
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+
+show_missing = true
+skip_covered = false
+skip_empty = true
+
+[tool.coverage.html]
+directory = ".reports/coverage/html"
+skip_covered = false
+skip_empty = true
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"] # Only scan tests directory
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+pythonpath = ["src"] # Add src to Python path for imports
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=src",
+    "--cov-report=html:.reports/coverage",
+    "--cov-report=term-missing",
+    "--html=.reports/tests/report.html",
+    "--self-contained-html",
+
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "config: Configuration system tests",
+    "path_resolver: Path resolution tests",
+    "settings: Settings management tests",
+    "temp_files: Tests involving temporary files",
+    "windows_paths: Windows-specific path tests",
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# ✅ Enhanced logging with colors
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+log_auto_indent = true
+
+
+# ✅ Minimum version requirements
+minversion = "8.0"
+
+# ✅ Test discovery options
+norecursedirs = [
+    ".*",
+    "build",
+    "dist",
+    "*.egg",
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".reports",
+]
