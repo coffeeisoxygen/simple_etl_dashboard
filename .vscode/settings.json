@@ -51,13 +51,20 @@
     "todo.timekeeping.finished.format": "YY-MM-DD HH:mm",
     "todo.timekeeping.elapsed.enabled": true,
     // Statistics (helpful untuk progress tracking)
-    "todo.statistics.project.enabled": true,
-    "todo.statistics.project.text": "([pending]/[all]) [percentage]%",
-    "todo.statistics.statusbar.enabled": true,
-    "todo.statistics.statusbar.text": "📋 [finished]/[all] ([percentage]%)",
-    "todo.statistics.statusbar.tooltip": "[pending] Pending - [done] Done - [cancelled] Cancelled",
-    // Archive configuration
     "todo.archive.name": "Archive",
     "todo.archive.remove.emptyProjects": true,
-    "todo.archive.sortByDate": true
+    "todo.archive.sortByDate": true,
+    "todo.timer.statusbar.enabled": "estimate",
+    "todo.timer.statusbar.color": "",
+    "todo.timer.statusbar.priority": -10,
+    "todo.statistics.project.enabled": "global.projects < 100",
+    "todo.statistics.project.text": "([pending]) [est]",
+    "todo.statistics.statusbar.enabled": "global.projects < 100 && project.all > 0",
+    "todo.statistics.statusbar.ignoreArchive": true, // Ignore the archive when rendering statistics in the statusbar
+    "todo.statistics.statusbar.alignment": "left", // Should the item be placed to the left or right?
+    "todo.statistics.statusbar.color": "",
+    "todo.statistics.statusbar.command": "", // Command to execute on click
+    "todo.statistics.statusbar.priority": -1, // The priority of this item. Higher value means the item should be shown more to the left
+    "todo.statistics.statusbar.text": "$(check) [finished]/[all] ([percentage]%)", // Template used for rendering the text
+    "todo.statistics.statusbar.tooltip": "[pending] Pending - [done] Done - [cancelled] Cancelled", // Template used for rendering the tooltip
 }

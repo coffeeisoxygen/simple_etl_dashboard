@@ -3,18 +3,19 @@ indosat_salesdashboard:
   preparation-phase: (4/5) 80%
     ✔ make a project with uv @done(25-06-13 12:55)
     ✔ menentukan library yang akan di gunakan @done(25-06-13 20:00)
-    ✔ Setup Pyproject @done(25-06-13 20:00)
-    ✔ Setup Git @done(25-06-13 20:00)
-    ✔ Setup Virtual Environment @done(25-06-13 20:00)
-    ✔ Setup Repository @done(25-06-13 20:00)
+    ✔ Setup basic Project @done(25-06-13 20:00)
+    ✔ Setup basic Git @done(25-06-13 20:00)
+    ✔ Setup basic Virtual Environment @done(25-06-13 20:00)
+    ✔ Setup basic Repository @done(25-06-13 20:00)
+    ✔ setup Basic pyproject.toml @done(25-06-13 22:59)
     ✔ Setup Pre-commit @done(25-06-13 20:00)
-    ☐ setup mkdocs @low @next
 
   architecture-phase: @next
-    ☐ define project structure @high
+    ✔ define project structure @high @done(25-06-13 22:57)
     ☐ setup database models @medium
     ☐ create config management @medium
-    ☐ setup logging system @low
+    ✔ setup logging system @low @done(25-06-13 22:51)
+    ✔ make a prototype of dashboard to define the feature @done(25-06-13 22:59)
 
   development-phase: @waiting
     ☐ implement user management @critical
