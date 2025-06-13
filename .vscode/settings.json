@@ -56,7 +56,7 @@
     "todo.archive.sortByDate": true,
     "todo.timer.statusbar.enabled": "estimate",
     "todo.timer.statusbar.color": "",
-    "todo.timer.statusbar.priority": -10,
+    "todo.timer.statusbar.priority": true,
     "todo.statistics.project.enabled": "global.projects < 100",
     "todo.statistics.project.text": "([pending]) [est]",
     "todo.statistics.statusbar.enabled": "global.projects < 100 && project.all > 0",

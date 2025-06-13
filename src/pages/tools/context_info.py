@@ -134,8 +134,12 @@ with col2:
             ctx = get_script_run_ctx()
             if ctx:
                 st.code(ctx.session_id)
-        except:
-            st.error("Cannot retrieve session ID")
+        except ImportError:
+            st.error("Cannot import required modules")
+        except AttributeError as e:
+            st.error(f"Cannot access session context: {str(e)}")
+        except Exception as e:
+            st.error(f"Cannot retrieve session ID: {str(e)}")
 
 with col3:
     if st.button("🧹 Clear Session"):

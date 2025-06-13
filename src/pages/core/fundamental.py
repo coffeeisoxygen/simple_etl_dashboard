@@ -3,14 +3,16 @@
 # Multi tabs untuk fundamental Info dan summary
 import streamlit as st
 
-tab_info, tab_profile, tab_territory, tab_site, tab_population, tab_retailer = st.tabs([
-    "Informasi Bisnis",
-    "Profil Usaha",
-    "Wilayah",
-    "Site",
-    "Populasi",
-    "Retailer",
-])
+tab_info, tab_profile, tab_territory, tab_site, tab_population, tab_retailer = st.tabs(
+    [
+        "Informasi Bisnis",
+        "Profil Usaha",
+        "Wilayah",
+        "Site",
+        "Populasi",
+        "Retailer",
+    ]
+)
 
 with tab_info:
     """ini adalah summary dari bisnis yang sudah di input oleh user.

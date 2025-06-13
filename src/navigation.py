@@ -87,14 +87,16 @@ def run_navigation() -> None:
 
     # Setup navigation based on login status
     if st.session_state.logged_in:
-        pg = st.navigation({
-            "Dashboard": [dashboard],
-            "Profile": [fundamental],
-            "Mobo": [transaksi, komisi, transfer, alokasi],
-            "Mobi": [sellin, visits],
-            "Tools": [util_upload, context_info],
-            "Account": [logout_page],
-        })
+        pg = st.navigation(
+            {
+                "Dashboard": [dashboard],
+                "Profile": [fundamental],
+                "Mobo": [transaksi, komisi, transfer, alokasi],
+                "Mobi": [sellin, visits],
+                "Tools": [util_upload, context_info],
+                "Account": [logout_page],
+            }
+        )
     else:
         pg = st.navigation([login_page])
 
