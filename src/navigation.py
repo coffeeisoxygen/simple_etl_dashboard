@@ -85,10 +85,10 @@ class NavigationManager:
                 description="Resource allocation",
             ),
             # Tools Pages
-            "context_info": PageConfig(
-                file_path="pages/tools/context_info.py",
-                title="Context Info",
-                icon=":material/info:",
+            "debugging": PageConfig(
+                file_path="pages/tools/debug_tools.py",
+                title="Debugging",
+                icon=":material/heap_snapshot_large:",
                 category=PageCategory.TOOLS,
                 description="System context information",
             ),

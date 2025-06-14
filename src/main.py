@@ -4,6 +4,7 @@ import streamlit as st
 from loguru import logger
 
 from navigation import run_navigation
+from src.authentication import is_authenticated, show_login_form, show_user_info
 from src.config.log_setup import setup_logging
 
 
@@ -39,6 +40,15 @@ def main() -> None:
     setup_logging()  # Already has guard
     setup_app_state()  # Guard pattern
 
+    # Authentication check
+    if not is_authenticated():
+        show_login_form()
+        return
+
+    # Show user info in sidebar
+    show_user_info()
+
+    # Run main navigation
     run_navigation()
 
 

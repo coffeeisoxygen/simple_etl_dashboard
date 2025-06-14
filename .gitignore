@@ -42,3 +42,4 @@ Thumbs.db
 temp/sample/
 
 *.env
+user_info.json
