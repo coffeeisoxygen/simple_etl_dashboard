@@ -39,3 +39,6 @@ Thumbs.db
 
 *.log
 *.logs
+temp/sample/
+
+*.env

@@ -9,15 +9,24 @@ indosat_salesdashboard:
     ✔ Setup basic Repository @done(25-06-13 20:00)
     ✔ setup Basic pyproject.toml @done(25-06-13 22:59)
     ✔ Setup Pre-commit @done(25-06-13 20:00)
-
+    □ Design minimal models (User + core data entities)
+    □ Create essential interfaces
+    □ Implement core services (auth + basic data)
+    □ Test critical paths
+    □ Implement database layer
+    □ Integration testing
+    □ UI integration
   architecture-phase: @next
     ✔ define project structure @high @done(25-06-13 22:57)
-    ☐ setup database models @medium
-    ☐ create config management @medium
+    ✔ solve cache management @high @done(25-06-14 09:19)
+    ✔ solve resources management @high @done(25-06-14 09:19)
+    ✔ solve state management @high @done(25-06-14 09:19)
+    ✔ solve context management @high @done(25-06-14 09:19)
     ✔ setup logging system @low @done(25-06-13 22:51)
     ✔ make a prototype of dashboard to define the feature @done(25-06-13 22:59)
 
   development-phase: @waiting
+    ☐ implement model + service layer @critical
     ☐ implement user management @critical
     ☐ implement authentication @critical
     ☐ create ETL pipeline @high
