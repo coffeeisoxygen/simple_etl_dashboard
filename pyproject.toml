@@ -7,11 +7,13 @@ requires-python = ">=3.12"
 dependencies = [
     "bcrypt>=4.3.0",
     "loguru>=0.7.3",
+    "openpyxl>=3.1.5",
     "plotly>=6.1.2",
-    "pydantic>=2.11.5",
     "python-dotenv>=1.1.0",
     "sqlalchemy>=2.0.41",
+    "stqdm>=0.0.5",
     "streamlit>=1.45.1",
+    "streamlit-pydantic>=0.6.0",
 ]
 
 [dependency-groups]
@@ -48,7 +50,6 @@ omit = [
     "*/_version.py",
     "*/scripts/*",
     "*/__init__.py",
-    # "*/__main__.py",
     "*/site-packages/*",
     "*/.venv/*",
     "*/shibokensupport/*",
@@ -127,60 +128,43 @@ norecursedirs = [
     ".reports",
 ]
 
+
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-src = ["src"]            # Tell Ruff where your source code is
+src = ["src"]
+fixable = ["ALL"]
+unfixable = []
 
-
-# Focus pada docstring, type hints, dan basics
-lint.select = [
+select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
     "F",   # pyflakes
     "I",   # isort
-    "D",   # pydocstyle (docstrings) ✨
-    "ANN", # flake8-annotations (type hints) ✨
+    "D",   # pydocstyle (docstrings)
+    "ANN", # flake8-annotations (type hints)
     "UP",  # pyupgrade (modern Python syntax)
     "B",   # flake8-bugbear (common bugs)
 ]
-
-lint.ignore = [
-    "E501", # line too long (handled by formatter)
-    "D100", # Missing docstring in public module
-    "D104", # Missing docstring in public package
-    "D107", # Missing docstring in __init__
-
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "D100",   # Missing docstring in public module
+    "D104",   # Missing docstring in public package
+    "D107",   # Missing docstring in __init__
     "ANN401", # Dynamically typed expressions (Any) are disallowed
+    "ANN204", # Missing return type annotation for special method `__init__`
+    "ANN002", # Missing type annotation for `*args`
+    "ANN003", # Missing type annotation for `**kwargs`
 ]
 
-# Docstring style configuration
 [tool.ruff.lint.pydocstyle]
-convention = "google" # Google, numpy, atau pep257
+convention = "google"
 
-# Per-file ignores untuk flexibility
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = [
-    "D",   # No docstrings required in tests
-    "ANN", # No type annotations required in tests
-]
-"scripts/*" = [
-    "D100", # Scripts don't need module docstrings
-]
-"__init__.py" = [
-    "D104", # __init__.py doesn't need docstrings
-]
-"_version/*" = [
-    "D",   # No docstrings required in version files
-    "ANN", # No type annotations required in version files
-    "E",   # Skip pycodestyle errors
-    "W",   # Skip pycodestyle warnings
-    "F",   # Skip pyflakes
-    "I",   # Skip isort
-    "UP",  # Skip pyupgrade
-    "B",   # Skip flake8-bugbear
-]
-
+"tests/*" = ["D", "ANN"]
+"scripts/*" = ["D100"]
+"__init__.py" = ["D104"]
+"_version/*" = ["D", "ANN", "E", "W", "F", "I", "UP", "B"]
 
 [tool.ruff.format]
 quote-style = "double"

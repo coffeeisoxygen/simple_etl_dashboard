@@ -43,3 +43,8 @@ temp/sample/
 
 *.env
 user_info.json
+
+*.dbml
+*.sqlite
+*.db
+logs/

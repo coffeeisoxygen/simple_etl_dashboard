@@ -1,6 +1,562 @@
-project {simple-dashboard}
+// This file defines the database schema for the ETL Dashboard system.
+// Updated to reflect actual business flow and requirements.
+// Final version aligned with business reality - ETL Dashboard focus with production tracking and IOH data integration.
 
+Table user {
+    id integer [primary key]
+    username varchar [not null, unique]
+    password_hash varchar [not null]
+    is_active boolean [default: true]
+    is_admin boolean [default: false]
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
 
-Table {
-    user
+    indexes {
+        username [unique]
+        is_active
+        tgl_data
+    }
+
+    note: 'User table stores user credentials and roles. Passwords are stored as hashes for security'
 }
+
+Table profile {
+    id integer [primary key]
+    user_id integer [not null, unique, note: 'Foreign key to user table']
+    org_id varchar [not null, unique, note: 'Unique identifier for the business: ID SDP / ID MIM3 contoh SDP 1336']
+    org_name varchar [not null, note: 'Name of the business contoh SDP Haurwangi']
+    bussines_type varchar [not null, note: 'Type of business, e.g., perorangan,PT, CV, UD']
+    bussines_name varchar [not null, note: 'Business name, e.g., PT. Dewi Pratama Putri Internusa']
+    address varchar [not null, note: 'Business address']
+    phone varchar [not null, note: 'Business phone number']
+    email varchar [not null, note: 'Business email address']
+    pic_name varchar [not null, note: 'Name of the person in charge']
+    pic_phone varchar [not null, note: 'Phone number of the person in charge']
+    circle_name varchar [not null, note: 'Name of the circle, e.g., Circle Jaya/ west java etc']
+    region_name varchar [not null, note: 'Name of the region, e.g., outer jaya / inner west java etc']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        user_id [unique]
+        org_id [unique]
+        circle_name
+        region_name
+        tgl_data
+    }
+
+    note: 'Profile table stores business information for each user'
+}
+
+Table territory {
+    id integer [primary key]
+    profile_id integer [not null, note: 'Foreign key to profile table - 1 territory diurus oleh 1 badan usaha']
+    territory_type varchar [not null, note: 'Type of territory: MC (Micro Cluster) or PT (Personal Territory)']
+    territory_name varchar [not null, note: 'Name of territory, e.g., MC-Haurwangi or PT-Haurwangi']
+    territory_code varchar [unique, note: 'Unique territory code for identification']
+    catatan varchar [note: 'Additional notes about the territory']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        profile_id
+        territory_code [unique]
+        territory_type
+        territory_name
+        tgl_data
+    }
+
+    note: 'Territory table - each territory is managed by one business entity'
+}
+
+Table desa {
+    id integer [primary key]
+    territory_id integer [not null, note: 'Foreign key to territory - 1 desa belongs to 1 territory only']
+    nama_desa varchar [not null, note: 'Name of the village']
+    kode_desa varchar [unique, note: 'Unique village code']
+    populasi integer [not null, note: 'Population of the village']
+    luas_wilayah float [not null, note: 'Area size in square kilometers']
+    kecamatan varchar [not null, note: 'Name of the sub-district']
+    kabupaten varchar [not null, note: 'Name of the regency']
+    provinsi varchar [not null, note: 'Name of the province']
+    koordinat_lat decimal(10,8) [note: 'Latitude coordinate']
+    koordinat_lng decimal(11,8) [note: 'Longitude coordinate']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        territory_id
+        kode_desa [unique]
+        nama_desa
+        kecamatan
+        kabupaten
+        provinsi
+        (koordinat_lat, koordinat_lng)
+        tgl_data
+    }
+
+    note: 'Village table - each village belongs to exactly one territory'
+}
+
+Table site {
+    id integer [primary key]
+    territory_id integer [not null, note: 'Foreign key to territory - 1 site belongs to 1 territory']
+    site_code varchar [not null, unique, note: 'Unique site/tower code']
+    site_name varchar [not null, note: 'Name of the site/tower']
+    site_type varchar [not null, note: 'Type of site: BTS, NodeB, eNodeB, gNodeB, etc']
+    koordinat_lat decimal(10,8) [not null, note: 'Latitude coordinate of the site']
+    koordinat_lng decimal(11,8) [not null, note: 'Longitude coordinate of the site']
+    tinggi_menara integer [note: 'Tower height in meters']
+    alamat varchar [note: 'Site address']
+    status_operasi varchar [default: 'active', note: 'Operation status: active, inactive, maintenance']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        territory_id
+        site_code [unique]
+        site_name
+        site_type
+        (koordinat_lat, koordinat_lng)
+        status_operasi
+        tgl_data
+    }
+
+    note: 'Site table - each site belongs to exactly one territory'
+}
+
+Table retailer {
+    id integer [primary key]
+    retailer_code varchar [not null, unique, note: 'Unique retailer code']
+    retailer_name varchar [not null, note: 'Name of the retailer']
+    retailer_type varchar [not null, note: 'Type: Dealer, Sub-dealer, Counter, Booth, etc']
+    owner_name varchar [not null, note: 'Name of the retailer owner']
+    phone varchar [not null, note: 'Retailer phone number']
+    alamat varchar [not null, note: 'Retailer address']
+    desa_id integer [note: 'Foreign key to desa table - administrative location']
+    territory_id integer [not null, note: 'Foreign key to territory - business territory assignment']
+    koordinat_lat decimal(10,8) [note: 'Latitude coordinate']
+    koordinat_lng decimal(11,8) [note: 'Longitude coordinate']
+    status_aktif boolean [default: true, note: 'Active status']
+    is_grey_area boolean [default: false, note: 'True if administrative != business territory']
+    catatan_territory varchar [note: 'Notes about territory assignment reasons']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        retailer_code [unique]
+        retailer_name
+        retailer_type
+        desa_id
+        territory_id
+        (koordinat_lat, koordinat_lng)
+        status_aktif
+        is_grey_area
+        tgl_data
+    }
+
+    note: 'Retailer table - can be assigned to different business territory than administrative location'
+}
+
+Table sales_team {
+    id integer [primary key]
+    employee_id varchar [not null, unique, note: 'Employee ID/NIK']
+    employee_name varchar [not null, note: 'Full name of sales person']
+    employee_phone varchar [not null, note: 'Phone number']
+    employee_email varchar [note: 'Email address']
+    position varchar [not null, note: 'Position: DSE, Sales Supervisor, etc']
+    territory_id integer [not null, note: 'Primary territory assignment']
+    is_active boolean [default: true, note: 'Active employment status']
+    hire_date date [not null, note: 'Hire date']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        employee_id [unique]
+        employee_name
+        territory_id
+        position
+        is_active
+        tgl_data
+    }
+
+    note: 'Sales team table - DSE and other sales personnel'
+}
+
+Table sales_retailer_assignment {
+    id integer [primary key]
+    sales_team_id integer [not null, note: 'Foreign key to sales_team']
+    retailer_id integer [not null, note: 'Foreign key to retailer']
+    assignment_type varchar [not null, note: 'Type: primary, secondary, backup']
+    start_date date [not null, note: 'Assignment start date']
+    end_date date [note: 'Assignment end date if finished']
+    is_active boolean [default: true, note: 'Current assignment status']
+    catatan varchar [note: 'Assignment notes']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        sales_team_id
+        retailer_id
+        (sales_team_id, retailer_id, is_active) [unique, name: 'unique_active_assignment']
+        assignment_type
+        is_active
+        start_date
+        tgl_data
+    }
+
+    note: 'Junction table - sales team assignment to specific retailers'
+}
+
+Table activity_log {
+    id integer [primary key]
+    user_id integer [note: 'Foreign key to user table - who performed the action']
+    action varchar [not null, note: 'Action type: CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc']
+    table_name varchar [note: 'Target table name for CRUD operations']
+    record_id integer [note: 'Target record ID for CRUD operations']
+    old_values text [note: 'JSON string of old values for UPDATE operations']
+    new_values text [note: 'JSON string of new/current values for CREATE/UPDATE operations']
+    ip_address varchar [note: 'Client IP address']
+    user_agent varchar [note: 'Client user agent string']
+    session_id varchar [note: 'Session identifier']
+    status varchar [default: 'success', note: 'Operation status: success, failed, unauthorized']
+    error_message varchar [note: 'Error details if status = failed']
+    timestamp timestamp [default: `CURRENT_TIMESTAMP`, note: 'When the action occurred']
+
+    indexes {
+        user_id
+        action
+        table_name
+        record_id
+        timestamp
+        (table_name, record_id)
+        (user_id, timestamp)
+        status
+    }
+
+    note: 'Activity log table - tracks all user actions and system events'
+}
+
+Table product_category {
+    id integer [primary key]
+    category_code varchar [not null, unique, note: 'Category code: SALDO_MOBO, STARTER_PACK, VOUCHER']
+    category_name varchar [not null, note: 'Category display name']
+    is_virtual boolean [default: false, note: 'True for saldo mobo, false for physical products']
+    is_active boolean [default: true]
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        category_code [unique]
+        is_virtual
+        is_active
+    }
+
+    note: 'Product categories: Saldo Mobo (virtual), Starter Pack, Voucher (physical)'
+}
+
+Table product {
+    id integer [primary key]
+    product_code varchar [not null, unique, note: 'Unique product code/SKU']
+    product_name varchar [not null, note: 'Product display name']
+    category_id integer [not null, note: 'Foreign key to product_category']
+    denomination integer [note: 'Product value/denomination in rupiah']
+    source_type varchar [not null, note: 'IOH (Indosat Original) or SELF_PRODUCED']
+    supplier_name varchar [note: 'Supplier name if IOH, or production facility if self-produced']
+    unit_type varchar [not null, note: 'Unit measurement: PCS, MB, RUPIAH, etc']
+    is_active boolean [default: true]
+    description text [note: 'Product description']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        product_code [unique]
+        category_id
+        source_type
+        denomination
+        is_active
+    }
+
+    note: 'Master product table - both virtual (saldo mobo) and physical products'
+}
+
+Table product_price {
+    id integer [primary key]
+    product_id integer [not null, note: 'Foreign key to product']
+    price_type varchar [not null, note: 'PURCHASE (harga beli dari supplier), SELLING (harga jual umum ke retailer)']
+    price decimal(12,2) [not null, note: 'Price amount']
+    effective_date date [not null, note: 'When this price becomes effective']
+    end_date date [note: 'When this price expires, NULL for current price']
+    is_active boolean [default: true]
+    catatan varchar [note: 'Price change notes']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        product_id
+        price_type
+        effective_date
+        is_active
+        (product_id, price_type, is_active) [unique, name: 'unique_active_price']
+    }
+
+    note: 'Simple pricing: Purchase price (cost) and Standard selling price (baseline)'
+}
+
+Table sales_transaction {
+    id integer [primary key]
+    transaction_code varchar [not null, unique, note: 'Unique transaction reference']
+    retailer_id integer [not null, note: 'Foreign key to retailer - who bought']
+    sales_team_id integer [note: 'Foreign key to sales_team - who sold (DSE)']
+    territory_id integer [not null, note: 'Territory where transaction occurred']
+    transaction_date date [not null, note: 'Transaction date']
+    transaction_type varchar [not null, note: 'SALES, RETURN, ADJUSTMENT']
+    total_amount decimal(12,2) [not null, note: 'Total transaction amount']
+    payment_method varchar [not null, note: 'CASH, TRANSFER, CREDIT, etc']
+    payment_status varchar [default: 'PENDING', note: 'PENDING, PAID, OVERDUE, CANCELLED']
+    due_date date [note: 'Payment due date for credit transactions']
+    catatan text [note: 'Transaction notes']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        transaction_code [unique]
+        retailer_id
+        sales_team_id
+        territory_id
+        transaction_date
+        transaction_type
+        payment_status
+        (retailer_id, transaction_date)
+        (sales_team_id, transaction_date)
+    }
+
+    note: 'Sales transaction header - records sales to retailers'
+}
+
+Table sales_transaction_detail {
+    id integer [primary key]
+    transaction_id integer [not null, note: 'Foreign key to sales_transaction']
+    product_id integer [not null, note: 'Foreign key to product']
+    quantity integer [not null, note: 'Quantity sold']
+    standard_price decimal(12,2) [not null, note: 'Standard selling price at time of sale']
+    actual_price decimal(12,2) [not null, note: 'Actual price charged (after any discount)']
+    discount_amount decimal(12,2) [default: 0, note: 'Total discount given (standard_price - actual_price) * quantity']
+    discount_reason varchar [note: 'Reason for discount: VOLUME, LOYALTY, PROMO, NEGOTIATION, etc']
+    line_total decimal(12,2) [not null, note: 'Line total (actual_price * quantity)']
+    catatan varchar [note: 'Line item notes']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        transaction_id
+        product_id
+        (transaction_id, product_id) [unique, name: 'unique_transaction_product']
+    }
+
+    note: 'Sales transaction detail with natural discount tracking at transaction level'
+}
+
+Table stock_movement {
+    id integer [primary key]
+    territory_id integer [not null, note: 'Territory where stock movement occurred']
+    product_id integer [not null, note: 'Product being moved']
+    movement_type varchar [not null, note: 'IN (purchase/production), OUT (sales), ADJUSTMENT (correction)']
+    reference_type varchar [note: 'PURCHASE, SALES, PRODUCTION, ADJUSTMENT, TRANSFER']
+    reference_id integer [note: 'Reference to sales_transaction or production_batch']
+    quantity_before integer [not null, note: 'Stock quantity before movement']
+    quantity_movement integer [not null, note: 'Movement quantity (positive for IN, negative for OUT)']
+    quantity_after integer [not null, note: 'Stock quantity after movement']
+    unit_cost decimal(12,2) [note: 'Cost per unit for this movement (for COGS calculation)']
+    movement_date date [not null, note: 'Date of stock movement']
+    catatan text [note: 'Movement notes']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        territory_id
+        product_id
+        movement_type
+        reference_type
+        movement_date
+        (territory_id, product_id, movement_date)
+    }
+
+    note: 'Stock movement log with unit cost tracking for margin analysis'
+}
+
+Table production_batch {
+    id integer [primary key]
+    territory_id integer [not null, note: 'Territory where production occurred']
+    batch_code varchar [not null, unique, note: 'Unique production batch code']
+    product_id integer [not null, note: 'Product being produced']
+    target_quantity integer [not null, note: 'Target production quantity']
+    actual_quantity integer [note: 'Actual produced quantity']
+    production_date date [not null, note: 'Production date']
+    status varchar [default: 'PLANNED', note: 'PLANNED, IN_PROGRESS, COMPLETED, CANCELLED']
+    total_cost decimal(12,2) [note: 'Total production cost']
+    cost_per_unit decimal(12,2) [note: 'Calculated cost per unit']
+    production_reason varchar [note: 'Reason for production: KPI_TARGET, STOCK_SHORTAGE, DEMAND_SPIKE, OTHER']
+    catatan text [note: 'Production notes']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        territory_id
+        batch_code [unique]
+        product_id
+        production_date
+        status
+        production_reason
+    }
+
+    note: 'Production batch tracking for self-production cost calculation'
+}
+
+Table production_material {
+    id integer [primary key]
+    production_batch_id integer [not null, note: 'Foreign key to production_batch']
+    material_product_id integer [not null, note: 'Material product used (e.g., saldo mobo, VCR)']
+    quantity_used integer [not null, note: 'Quantity of material consumed']
+    unit_cost decimal(12,2) [not null, note: 'Cost per unit of material']
+    total_cost decimal(12,2) [not null, note: 'Total cost for this material']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        production_batch_id
+        material_product_id
+        (production_batch_id, material_product_id) [unique, name: 'unique_batch_material']
+    }
+
+    note: 'Materials used in production batch for cost calculation'
+}
+
+Table target {
+    id integer [primary key]
+    territory_id integer [not null, note: 'Foreign key to territory']
+    target_name varchar [not null, note: 'Target name/description']
+    target_type varchar [not null, note: 'Type: TRADE_SUPPLY, TRADE_DEMAND, RGU_GA, REVENUE, ACQUISITION, OTHER']
+    target_value decimal(15,2) [not null, note: 'Target value amount']
+    target_period varchar [not null, note: 'Target period in YYYY-MM format']
+    estimated_fee decimal(12,2) [note: 'Estimated fee if target achieved']
+    catatan text [note: 'Target notes']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        territory_id
+        target_type
+        target_period
+        (territory_id, target_name, target_type, target_period) [unique, name: 'unique_territory_target']
+    }
+
+    note: 'Simple target tracking table for IOH KPI targets - manual input from IOH team'
+}
+
+Table bonus {
+    id integer [primary key]
+    territory_id integer [not null, note: 'Foreign key to territory']
+    bonus_name varchar [not null, note: 'Bonus name/description']
+    bonus_type varchar [not null, note: 'Type: TRADE_SUPPLY, TRADE_DEMAND, RGU_GA, REVENUE, ACQUISITION, OTHER']
+    bonus_value decimal(12,2) [not null, note: 'Bonus amount (can be negative for losses)']
+    bonus_period varchar [not null, note: 'Bonus period in YYYY-MM format']
+    received_date date [note: 'Date when bonus was actually received']
+    status varchar [default: 'EXPECTED', note: 'Status: EXPECTED, RECEIVED, PARTIAL, CANCELLED']
+    catatan text [note: 'Bonus notes']
+    tgl_data timestamp [default: `CURRENT_TIMESTAMP`]
+
+    indexes {
+        territory_id
+        bonus_type
+        bonus_period
+        status
+        received_date
+        (territory_id, bonus_name, bonus_type, bonus_period) [unique, name: 'unique_territory_bonus']
+    }
+
+    note: 'Simple bonus tracking table for IOH bonus received - manual input with month+2 delay'
+}
+
+Table csv_import_log {
+    id integer [primary key]
+    file_name varchar [not null, note: 'Original CSV file name']
+    file_type varchar [not null, note: 'Type: TRANSACTION, KOMISI, TRANSFER, SELLIN, VISIT, ALLOC, SALES, STOCK, OTHER']
+    file_size integer [note: 'File size in bytes']
+    import_date timestamp [default: `CURRENT_TIMESTAMP`, note: 'When import was initiated']
+    status varchar [default: 'PENDING', note: 'Status: PENDING, PROCESSING, COMPLETED, FAILED, PARTIAL']
+    total_records integer [note: 'Total records in CSV file']
+    processed_records integer [note: 'Successfully processed records']
+    error_records integer [note: 'Records with errors']
+    error_details text [note: 'Detailed error information']
+    user_id integer [note: 'User who initiated the import']
+    territory_id integer [note: 'Territory associated with import']
+
+    indexes {
+        file_type
+        status
+        import_date
+        user_id
+        territory_id
+        (file_name, import_date)
+    }
+
+    note: 'Log table for CSV import tracking - core ETL functionality for scattered data consolidation'
+}
+
+Table ioh_data {
+    id integer [primary key]
+    territory_id integer [not null, note: 'Foreign key to territory']
+    data_type varchar [not null, note: 'Type: TRANSACTION, KOMISI, TRANSFER, SELLIN, VISIT, ALLOC']
+    data_period varchar [not null, note: 'Data period in YYYY-MM or YYYY-MM-DD format']
+    data_source varchar [not null, note: 'Source identifier for the data']
+    data_json text [not null, note: 'JSON string containing the actual data']
+    import_date timestamp [default: `CURRENT_TIMESTAMP`, note: 'When data was imported']
+    csv_import_log_id integer [note: 'Reference to the CSV import that created this record']
+
+    indexes {
+        territory_id
+        data_type
+        data_period
+        import_date
+        csv_import_log_id
+        (territory_id, data_type, data_period, data_source) [unique, name: 'unique_ioh_data_entry']
+    }
+
+    note: 'Generic table for IOH CSV data - flexible structure for the 6 main IOH data types'
+}
+
+// Foreign key relationships
+// Core business hierarchy - CASCADE for dependent data
+Ref: profile.user_id > user.id [delete: cascade, update: cascade]
+Ref: territory.profile_id > profile.id [delete: cascade, update: cascade]
+Ref: desa.territory_id > territory.id [delete: cascade, update: cascade]
+Ref: site.territory_id > territory.id [delete: cascade, update: cascade]
+
+// Business assignment relationships - CASCADE for operational data
+Ref: retailer.territory_id > territory.id [delete: cascade, update: cascade]
+Ref: sales_team.territory_id > territory.id [delete: cascade, update: cascade]
+
+// Reference relationships - SET NULL for optional references
+Ref: retailer.desa_id > desa.id [delete: set null, update: cascade]
+
+// Junction/Assignment tables - CASCADE (these are operational, not master data)
+Ref: sales_retailer_assignment.sales_team_id > sales_team.id [delete: cascade, update: cascade]
+Ref: sales_retailer_assignment.retailer_id > retailer.id [delete: cascade, update: cascade]
+
+// Activity log - SET NULL for user reference
+Ref: activity_log.user_id > user.id [delete: set null, update: cascade]
+
+// Product relationships - RESTRICT for data integrity
+Ref: product.category_id > product_category.id [delete: restrict, update: cascade]
+Ref: product_price.product_id > product.id [delete: cascade, update: cascade]
+
+// Sales transaction relationships - mix of RESTRICT and CASCADE
+Ref: sales_transaction.retailer_id > retailer.id [delete: restrict, update: cascade]
+Ref: sales_transaction.sales_team_id > sales_team.id [delete: set null, update: cascade]
+Ref: sales_transaction.territory_id > territory.id [delete: restrict, update: cascade]
+Ref: sales_transaction_detail.transaction_id > sales_transaction.id [delete: cascade, update: cascade]
+Ref: sales_transaction_detail.product_id > product.id [delete: restrict, update: cascade]
+
+// Stock movement relationships - RESTRICT to prevent data loss
+Ref: stock_movement.territory_id > territory.id [delete: restrict, update: cascade]
+Ref: stock_movement.product_id > product.id [delete: restrict, update: cascade]
+
+// Production relationships - RESTRICT for data integrity, CASCADE for dependent data
+Ref: production_batch.territory_id > territory.id [delete: restrict, update: cascade]
+Ref: production_batch.product_id > product.id [delete: restrict, update: cascade]
+Ref: production_material.production_batch_id > production_batch.id [delete: cascade, update: cascade]
+Ref: production_material.material_product_id > product.id [delete: restrict, update: cascade]
+
+// Target and Bonus relationships - CASCADE for operational data
+Ref: target.territory_id > territory.id [delete: cascade, update: cascade]
+Ref: bonus.territory_id > territory.id [delete: cascade, update: cascade]
+
+// ETL import relationships - SET NULL for optional references
+Ref: csv_import_log.user_id > user.id [delete: set null, update: cascade]
+Ref: csv_import_log.territory_id > territory.id [delete: set null, update: cascade]
+Ref: ioh_data.territory_id > territory.id [delete: cascade, update: cascade]
+Ref: ioh_data.csv_import_log_id > csv_import_log.id [delete: set null, update: cascade]

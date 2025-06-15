@@ -1,4 +1,4 @@
-"""Debug data collection service dengan clean separation."""
+"""Debug service classes dengan database integration yang baru."""
 
 import json
 from datetime import UTC, datetime
@@ -8,11 +8,8 @@ from typing import Any
 import streamlit as st
 from loguru import logger
 from src.authentication import get_session_info
-
-try:
-    import pytz
-except ImportError:
-    pytz = None
+from src.config.logging import LoggingState, get_logging_status
+from src.database import DatabaseManager, get_database_manager
 
 
 class SessionDebugData:
@@ -121,9 +118,9 @@ class ContextDebugData:
         }
 
         # Calculate local time if pytz available
-        if pytz and st.context.timezone:
+        if UTC and st.context.timezone:
             try:
-                tz = pytz.timezone(st.context.timezone)
+                tz = UTC
                 utc_now = datetime.now(UTC)
                 local_time = utc_now.astimezone(tz)
                 locale_info["local_time"] = local_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -177,67 +174,221 @@ class ContextDebugData:
         return descriptions.get(name, "")
 
 
-class AppStateDebugData:
-    """Application state dan metrics information."""
+class DatabaseDebugData:
+    """Database debug information."""
 
     def __init__(self) -> None:
-        self._increment_visit_counter()
-        self.metrics = self._collect_metrics()
-        self.session_state_info = self._get_session_state_info()
+        self.db_manager = self._get_db_manager_safely()
+        self.db_info = self._get_database_info()
 
-    def _increment_visit_counter(self) -> None:
-        """Increment debug page visit counter."""
-        if "debug_page_visits" not in st.session_state:
-            st.session_state.debug_page_visits = 0
-        st.session_state.debug_page_visits += 1
+    def _get_db_manager_safely(self) -> DatabaseManager | None:
+        """Get database manager with error handling."""
+        try:
+            return get_database_manager()
+        except Exception:
+            return None
 
-    def _collect_metrics(self) -> dict[str, Any]:
-        """Collect application metrics."""
-        metrics = {
-            "debug_page_visits": st.session_state.debug_page_visits,
-            "app_initialized": st.session_state.get("app_initialized", False),
-            "streamlit_session_id": self._get_streamlit_session_id(),
+    def _get_database_info(self) -> dict[str, Any]:
+        """Get database information with fallback."""
+        if self.db_manager is None:
+            return {
+                "status": "unavailable",
+                "error": "Database manager not initialized",
+            }
+
+        try:
+            return self.db_manager.get_database_info()
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+
+    @property
+    def connection_status(self) -> dict[str, Any]:
+        """Get database connection status."""
+        if self.db_manager is None:
+            return {"connected": False, "reason": "Manager not available"}
+
+        try:
+            # Test connection
+            test_query = "SELECT 1 as test"
+            result = self.db_manager.query(test_query, ttl=0)
+
+            return {
+                "connected": True,
+                "test_result": result.iloc[0]["test"] if not result.empty else None,
+                "connection_name": self.db_info.get("connection_name", "unknown"),
+            }
+        except Exception as e:
+            return {"connected": False, "error": str(e)}
+
+    @property
+    def schema_status(self) -> dict[str, Any]:
+        """Get database schema status."""
+        if not self.connection_status.get("connected", False):
+            return {"valid": False, "reason": "No connection"}
+
+        try:
+            tables_info = {}
+
+            # Get tables list
+            if "tables" in self.db_info:
+                table_names = (
+                    self.db_info["tables"].split(",") if self.db_info["tables"] else []
+                )
+
+                for table in table_names:
+                    count_key = f"{table}_count"
+                    if count_key in self.db_info:
+                        tables_info[table] = {
+                            "exists": True,
+                            "row_count": self.db_info[count_key],
+                        }
+
+            return {
+                "valid": True,
+                "table_count": len(tables_info),
+                "tables": tables_info,
+            }
+        except Exception as e:
+            return {"valid": False, "error": str(e)}
+
+
+class LoggingDebugData:
+    """Logging system debug information."""
+
+    def __init__(self) -> None:
+        self.logging_status = get_logging_status()
+        self.state_info = self._get_state_info()
+
+    def _get_state_info(self) -> dict[str, Any]:
+        """Get detailed logging state information."""
+        return {
+            "development_configured": LoggingState.is_dev_configured(),
+            "audit_configured": LoggingState.is_audit_configured(),
+            "fully_configured": LoggingState.is_fully_configured(),
+            "errors": LoggingState.get_errors(),
+            "error_count": len(LoggingState.get_errors()),
         }
 
-        # App uptime calculation
-        if "app_start_time" in st.session_state:
-            duration = datetime.now() - st.session_state.app_start_time
-            metrics["app_uptime"] = (
-                f"{duration.seconds // 60}m {duration.seconds % 60}s"
-            )
+    @property
+    def log_files_status(self) -> dict[str, Any]:
+        """Check log files status."""
+        log_files = {
+            "app.log": Path("logs/app.log"),
+            "error.log": Path("logs/error.log"),
+            "audit.sqlite": Path("logs/audit.sqlite"),
+        }
 
-        return metrics
+        status = {}
+        for name, path in log_files.items():
+            status[name] = {
+                "exists": path.exists(),
+                "size": path.stat().st_size if path.exists() else 0,
+                "path": str(path.resolve()),
+            }
 
-    def _get_streamlit_session_id(self) -> str:
-        """Get Streamlit session ID."""
-        try:
-            from streamlit.runtime.scriptrunner import get_script_run_ctx
+        return status
 
-            ctx = get_script_run_ctx()
-            return ctx.session_id if ctx else "Unable to retrieve"
-        except Exception as e:
-            return f"Unable to retrieve ({str(e)})"
+
+class AppStateDebugData:
+    """Enhanced app state debug data."""
+
+    def __init__(self) -> None:
+        # Original session state info
+        self.session_state_info = self._get_session_state_info()
+        self.metrics = self._get_metrics()
+
+        # New database and logging info
+        self.database_debug = DatabaseDebugData()
+        self.logging_debug = LoggingDebugData()
 
     def _get_session_state_info(self) -> dict[str, Any]:
         """Get session state information."""
         return {
-            "query_params": dict(st.query_params) if st.query_params else {},
             "total_keys": len(st.session_state.keys()),
-            "keys_list": list(st.session_state.keys()),
+            "keys": list(st.session_state.keys()),
+            "query_params": dict(st.query_params)
+            if hasattr(st, "query_params")
+            else {},
         }
 
-    def get_complete_session_state(self) -> dict[str, str]:
-        """Get complete session state as strings."""
-        session_dict = {}
+    def _get_metrics(self) -> dict[str, Any]:
+        """Get application metrics."""
+        if "debug_page_visits" not in st.session_state:
+            st.session_state.debug_page_visits = 0
+        st.session_state.debug_page_visits += 1
+
+        metrics = {
+            "debug_page_visits": st.session_state.debug_page_visits,
+            "app_initialized": st.session_state.get("app_initialized", False),
+            "streamlit_session_id": st.session_state.get("session_id", "unknown"),
+        }
+
+        if "app_start_time" in st.session_state:
+            start_time = st.session_state.app_start_time
+            uptime = datetime.now() - start_time
+            metrics["app_uptime"] = str(uptime).split(".")[0]  # Remove microseconds
+
+        return metrics
+
+    def get_complete_session_state(self) -> dict[str, Any]:
+        """Get complete session state for debugging."""
+        state = {}
         for key in st.session_state.keys():
             try:
-                session_dict[key] = str(st.session_state[key])
-            except (TypeError, ValueError, AttributeError) as e:
-                session_dict[key] = (
-                    f"<{type(st.session_state[key]).__name__}: {str(e)}>"
-                )
+                # Try to serialize the value
+                value = st.session_state[key]
+                json.dumps(value, default=str)  # Test serialization
+                state[key] = value
+            except (TypeError, ValueError):
+                # If not serializable, convert to string
+                state[key] = f"<{type(value).__name__}: {str(value)[:100]}>"
+        return state
 
-        return session_dict
+
+# Enhanced Debug Report Generator
+class DebugReportGenerator:
+    """Generate comprehensive debug reports."""
+
+    def __init__(self) -> None:
+        self.session_debug = SessionDebugData()
+        self.context_debug = ContextDebugData()
+        self.app_state_debug = AppStateDebugData()
+
+    def generate_report(self) -> dict[str, Any]:
+        """Generate complete debug report."""
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "session": {
+                "session_info": self.session_debug.session_info,
+                "user_data": self.session_debug.user_data,
+                "browser_session_id": self.session_debug.browser_session_id,
+            },
+            "context": self.context_debug.context_data,
+            "app_state": {
+                "session_info": self.app_state_debug.session_state_info,
+                "metrics": self.app_state_debug.metrics,
+            },
+            "database": {
+                "connection_status": self.app_state_debug.database_debug.connection_status,
+                "schema_status": self.app_state_debug.database_debug.schema_status,
+                "db_info": self.app_state_debug.database_debug.db_info,
+            },
+            "logging": {
+                "status": self.app_state_debug.logging_debug.logging_status,
+                "state": self.app_state_debug.logging_debug.state_info,
+                "log_files": self.app_state_debug.logging_debug.log_files_status,
+            },
+        }
+
+    def export_as_json(self) -> str:
+        """Export debug report as JSON string."""
+        report = self.generate_report()
+        return json.dumps(report, indent=2, default=str)
+
+    def get_filename(self) -> str:
+        """Get filename for debug report."""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return f"debug_report_{timestamp}.json"
 
 
 class DebugActionService:
@@ -291,33 +442,3 @@ class DebugActionService:
             del st.session_state["authenticated"]
             return True
         return False
-
-
-class DebugReportGenerator:
-    """Generate comprehensive debug reports."""
-
-    def __init__(self) -> None:
-        self.session_data = SessionDebugData()
-        self.context_data = ContextDebugData()
-        self.app_state_data = AppStateDebugData()
-
-    def generate_report(self) -> dict[str, Any]:
-        """Generate comprehensive debug report."""
-        return {
-            "timestamp": datetime.now().isoformat(),
-            "session_info": self.session_data.session_info,
-            "user_data": self.session_data.user_data,
-            "context": self.context_data.context_data,
-            "app_state": {
-                "metrics": self.app_state_data.metrics,
-                "session_state_info": self.app_state_data.session_state_info,
-            },
-        }
-
-    def export_as_json(self) -> str:
-        """Export report as JSON string."""
-        return json.dumps(self.generate_report(), indent=2)
-
-    def get_filename(self) -> str:
-        """Get formatted filename for export."""
-        return f"debug_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"

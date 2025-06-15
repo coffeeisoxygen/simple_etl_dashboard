@@ -1,4 +1,4 @@
-"""Clean debug tools UI dengan separation of concerns."""
+"""Enhanced debug tools dengan database dan logging info."""
 
 import streamlit as st
 from src.models.debug_service import (
@@ -12,7 +12,15 @@ from src.models.debug_service import (
 st.title("🔧 Debug Tools")
 
 # Create tabs for different debug categories
-tab1, tab2, tab3, tab4 = st.tabs(["🔐 Session", "🌐 Context", "📊 State", "⚡ Actions"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    [
+        "🔐 Session",
+        "🌐 Context",
+        "📊 State",
+        "🗄️ Database",
+        "⚡ Actions",
+    ]
+)
 
 # Tab 1: Session Debug
 with tab1:
@@ -128,8 +136,90 @@ with tab3:
         complete_state = app_state_debug.get_complete_session_state()
         st.json(complete_state)
 
-# Tab 4: Actions
+# Tab 4: Database & Logging
 with tab4:
+    st.header("Database & Logging Status")
+
+    # Database section
+    st.subheader("🗄️ Database Status")
+    db_debug = app_state_debug.database_debug
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.write("**Connection Status**")
+        conn_status = db_debug.connection_status
+
+        if conn_status.get("connected", False):
+            st.success("✅ Database Connected")
+            st.write(f"Connection: `{conn_status.get('connection_name', 'unknown')}`")
+        else:
+            st.error("❌ Database Disconnected")
+            if "error" in conn_status:
+                st.error(f"Error: {conn_status['error']}")
+
+    with col2:
+        st.write("**Schema Status**")
+        schema_status = db_debug.schema_status
+
+        if schema_status.get("valid", False):
+            st.success(
+                f"✅ Schema Valid ({schema_status.get('table_count', 0)} tables)"
+            )
+
+            if "tables" in schema_status:
+                st.write("**Tables:**")
+                for table_name, table_info in schema_status["tables"].items():
+                    st.write(f"- `{table_name}`: {table_info.get('row_count', 0)} rows")
+        else:
+            st.error("❌ Schema Issues")
+            if "error" in schema_status:
+                st.error(f"Error: {schema_status['error']}")
+
+    # Database info details
+    if st.button("🔍 Show Database Details"):
+        st.json(db_debug.db_info)
+
+    st.divider()
+
+    # Logging section
+    st.subheader("📝 Logging Status")
+    logging_debug = app_state_debug.logging_debug
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.write("**Configuration Status**")
+        state_info = logging_debug.state_info
+
+        if state_info.get("fully_configured", False):
+            st.success("✅ Logging Fully Configured")
+        else:
+            st.warning("⚠️ Partial Logging Configuration")
+
+        st.write(
+            f"Development: {'✅' if state_info.get('development_configured') else '❌'}"
+        )
+        st.write(f"Audit: {'✅' if state_info.get('audit_configured') else '❌'}")
+
+        if state_info.get("error_count", 0) > 0:
+            st.error(f"Errors: {state_info['error_count']}")
+            for error in state_info.get("errors", []):
+                st.error(f"- {error}")
+
+    with col2:
+        st.write("**Log Files Status**")
+        log_files = logging_debug.log_files_status
+
+        for file_name, file_info in log_files.items():
+            if file_info["exists"]:
+                size_mb = file_info["size"] / (1024 * 1024)
+                st.success(f"✅ {file_name} ({size_mb:.2f} MB)")
+            else:
+                st.warning(f"⚠️ {file_name} (missing)")
+
+# Tab 5: Actions
+with tab5:
     st.header("Debug Actions")
 
     col1, col2, col3 = st.columns(3)
