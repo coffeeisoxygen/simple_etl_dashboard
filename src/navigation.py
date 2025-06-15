@@ -7,7 +7,7 @@ from enum import Enum
 import streamlit as st
 from loguru import logger
 
-from src.config.logging import log_action
+from src.config.logging.logging_config import log_activity  # Updated import
 
 
 class PageCategory(Enum):
@@ -153,12 +153,13 @@ class NavigationStructureBuilder:
         """Log page loading error dengan audit."""
         logger.error(f"Error loading page {config.title}: {error}")
 
-        log_action(
-            action="page_load_error",
-            message=f"Failed to load page: {config.title}",
-            resource=f"page/{config.file_path}",
-            detail={"error": str(error), "config": config.__dict__},
-            level="ERROR",
+        # FIXED: Changed log_action to log_activity
+        log_activity(
+            "PAGE_LOAD_ERROR",
+            f"Failed to load page: {config.title}",
+            error=str(error),
+            file_path=config.file_path,
+            page_title=config.title,
         )
 
     def build_navigation_structure(self) -> dict[str, list]:
@@ -202,17 +203,12 @@ class NavigationManager:
         """Setup audit logging context for navigation."""
         SessionContextManager.setup_audit_context()
 
-        # Log navigation system startup
-        log_action(
-            action="navigation_init",
-            message="Navigation system initialized",
-            resource="navigation_manager",
-            detail={"pages_registered": len(self.pages)},
+        # Activity logging - updated
+        log_activity(
+            "NAV_INIT",
+            "Navigation system initialized",
+            pages_registered=len(self.pages),
         )
-
-    def get_page_info(self, page_key: str) -> PageConfig | None:
-        """Get page configuration by key."""
-        return self.pages.get(page_key)
 
     def run(self) -> None:
         """Run navigation system dengan audit logging."""
@@ -229,26 +225,21 @@ class NavigationManager:
 
     def _log_navigation_start(self, nav_structure: dict) -> None:
         """Log navigation system start."""
-        log_action(
-            action="navigation_run",
-            message="Navigation system started",
-            resource="navigation_system",
-            detail={
-                "categories": len(nav_structure),
-                "total_pages": sum(len(pages) for pages in nav_structure.values()),
-            },
+        log_activity(
+            "NAV_START",
+            "Navigation system started",
+            categories=len(nav_structure),
+            total_pages=sum(len(pages) for pages in nav_structure.values()),
         )
 
     def _handle_navigation_error(self, error: Exception) -> None:
         """Handle navigation system errors."""
         logger.error(f"Navigation system failed: {error}")
 
-        log_action(
-            action="navigation_failure",
-            message=f"Navigation system failed: {str(error)}",
-            resource="navigation_system",
-            detail={"error": str(error)},
-            level="ERROR",
+        log_activity(
+            "NAV_ERROR",
+            f"Navigation system failed: {str(error)}",
+            error=str(error),
         )
 
         st.error(
@@ -262,11 +253,10 @@ def run_navigation() -> None:
     if "nav_manager" not in st.session_state:
         st.session_state.nav_manager = NavigationManager()
 
-    # Audit navigation access
-    log_action(
-        action="navigation_access",
-        message="User accessed navigation system",
-        resource="navigation_entry_point",
+    # Activity logging - updated
+    log_activity(
+        "NAV_ACCESS",
+        "User accessed navigation system",
     )
 
     st.session_state.nav_manager.run()

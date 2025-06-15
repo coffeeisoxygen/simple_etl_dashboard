@@ -328,8 +328,8 @@ class DatabaseManager:
 
             shutil.copy2(self.config.MASTER_DB_FILE, backup_path)
 
+            # FUTURE: Implement backup compression using gzip or similar
             if self.config.BACKUP_COMPRESSION:
-                # TODO: Implement backup compression using gzip or similar
                 pass
 
             logger.info(f"Master database backed up to: {backup_path}")
@@ -502,6 +502,11 @@ class DatabaseManager:
 
         except Exception as e:
             logger.error(f"Connection reset failed: {e}")
+
+    # REVIEW: Consider adding database health check methods
+    # REVIEW: Evaluate need for connection pooling optimization
+    # FUTURE: Add database migration support
+    # FUTURE: Implement distributed database support for multiple territories
 
 
 @st.cache_resource

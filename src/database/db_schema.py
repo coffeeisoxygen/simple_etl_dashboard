@@ -171,7 +171,11 @@ class DatabaseSchema:
 
     @staticmethod
     def get_activity_log_table() -> str:
-        """Enhanced activity audit trail including retailer data synchronization."""
+        """Enhanced activity audit trail including retailer data synchronization.
+
+        NOTE: This table exists for future database-based activity logging if needed.
+        Currently using file-based logging approach for better reliability.
+        """
         return """
             CREATE TABLE IF NOT EXISTS activity_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -393,7 +397,7 @@ class DatabaseSchema:
             cls.get_desa_table(),
             cls.get_site_table(),
             cls.get_monthly_database_registry_table(),
-            cls.get_activity_log_table(),
+            cls.get_activity_log_table(),  # REVIEW: Consider removing if file-based logging is permanent
         ]
 
     @classmethod
@@ -404,7 +408,7 @@ class DatabaseSchema:
             cls.get_ioh_transaction_data_table(),
             cls.get_ioh_commission_data_table(),
             cls.get_ioh_transfer_data_table(),
-            cls.get_ioh_sellin_data_table(),  # Added missing table
+            cls.get_ioh_sellin_data_table(),
             cls.get_ioh_retailer_data_table(),
             cls.get_daily_summary_table(),
         ]
@@ -440,7 +444,7 @@ class DatabaseSchema:
             "CREATE INDEX IF NOT EXISTS idx_monthly_registry_period ON monthly_database_registry(month_period)",
             "CREATE INDEX IF NOT EXISTS idx_monthly_registry_territory ON monthly_database_registry(territory_id)",
             "CREATE INDEX IF NOT EXISTS idx_monthly_registry_status ON monthly_database_registry(status)",
-            # Activity log indexes
+            # Activity log indexes - REVIEW: Remove if file-based logging is permanent
             "CREATE INDEX IF NOT EXISTS idx_activity_user_id ON activity_log(user_id)",
             "CREATE INDEX IF NOT EXISTS idx_activity_action ON activity_log(action)",
             "CREATE INDEX IF NOT EXISTS idx_activity_table_name ON activity_log(table_name)",
@@ -638,6 +642,10 @@ class DatabaseSchema:
             "warnings": [],
             "statistics": {},
         }
+
+        # FUTURE: Add comprehensive schema validation logic
+        # FUTURE: Validate foreign key relationships
+        # FUTURE: Check for naming convention compliance
 
         try:
             # Count components

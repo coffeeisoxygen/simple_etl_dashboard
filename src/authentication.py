@@ -6,6 +6,7 @@ from typing import Any
 
 import streamlit as st
 
+from src.config.logging.logging_config import log_activity  # Updated import
 from src.models.session_manager import SessionManager
 from src.models.user_manager import UserManager
 
@@ -34,13 +35,29 @@ def _get_managers() -> tuple[UserManager, SessionManager]:
 def login(username: str, password: str) -> tuple[bool, str]:
     """Login user dengan clean OOP approach."""
     _, session_manager = _get_managers()
-    return session_manager.login(username, password)
+    success, message = session_manager.login(username, password)
+
+    # Activity logging
+    if success:
+        log_activity(
+            "LOGIN", f"User {username} logged in successfully", username=username
+        )
+    else:
+        log_activity(
+            "LOGIN_FAILED", f"Failed login attempt for {username}", username=username
+        )
+
+    return success, message
 
 
 def logout() -> None:
     """Logout user dengan clean OOP approach."""
+    username = st.session_state.get("username", "unknown")
     _, session_manager = _get_managers()
     session_manager.logout()
+
+    # Activity logging
+    log_activity("LOGOUT", f"User {username} logged out", username=username)
 
 
 def is_authenticated() -> bool:

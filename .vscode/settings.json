@@ -58,7 +58,7 @@
     "todo.timer.statusbar.color": "",
     "todo.timer.statusbar.priority": true,
     "todo.statistics.project.enabled": "global.projects < 100",
-    "todo.statistics.project.text": "([pending]) [est]",
+    "todo.statistics.project.text": "([pending]/[done]) [percentage]% [est]",
     "todo.statistics.statusbar.enabled": "global.projects < 100 && project.all > 0",
     "todo.statistics.statusbar.ignoreArchive": true, // Ignore the archive when rendering statistics in the statusbar
     "todo.statistics.statusbar.alignment": "left", // Should the item be placed to the left or right?
