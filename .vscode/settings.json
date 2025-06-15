@@ -66,5 +66,6 @@
     "todo.statistics.statusbar.command": "", // Command to execute on click
     "todo.statistics.statusbar.priority": -1, // The priority of this item. Higher value means the item should be shown more to the left
     "todo.statistics.statusbar.text": "$(check) [finished]/[all] ([percentage]%)", // Template used for rendering the text
-    "todo.statistics.statusbar.tooltip": "[pending] Pending - [done] Done - [cancelled] Cancelled", // Template used for rendering the tooltip
+    "todo.statistics.statusbar.tooltip": "[pending] Pending - [done] Done - [cancelled] Cancelled",
+    "todo-tree.tree.scanMode": "workspace only", // Template used for rendering the tooltip
 }
