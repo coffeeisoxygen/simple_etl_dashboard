@@ -48,3 +48,7 @@ user_info.json
 *.sqlite
 *.db
 logs/
+data/
+backup/
+.reports/allure/
+.reports/

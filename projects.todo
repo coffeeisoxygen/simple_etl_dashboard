@@ -10,45 +10,10 @@ indosat_salesdashboard:
     ✔ setup Basic pyproject.toml @done(25-06-13 22:59)
     ✔ Setup Pre-commit @done(25-06-13 20:00)
 
-  development-phase:
-    setup database:
-      ✔ finalize apps.dbml schema - Master/Monthly partitioning strategy @done(25-06-15 15:30)
-      ✔ create db_schema.py with complete IOH data tables (including missing ioh_sellin_data) @done(25-06-15 16:00)
-      ✔ create db_config.py with monthly partitioning & backup support @done(25-06-15 16:15)
-      ✔ create db_manager.py with enhanced monthly database management @done(25-06-15 16:45)
-      ✔ create db_exceptions.py for proper error handling @done(25-06-15 17:00)
-      ✔ fix type casting issues for SQLConnection compatibility @done(25-06-15 17:15)
-      ✔ setup database package __init__.py with proper exports @done(25-06-15 17:20)
-
-    setup logging with loguru:
-        ☐ make a logger handler for developement
-        ☐ make a logger handler for activity monitoring
-        ☐ make a logger handler for error logging
-
-    etl-processing:
-      ☐ create csv parser for IOH data formats
-      ☐ implement data validation & transformation
-      ☐ create ETL pipeline for monthly imports
-      ☐ implement error handling & logging for ETL
-      ☐ create data quality checks
-      ☐ setup automated ETL scheduling
-
-    dashboard-ui:
-      ☐ create main dashboard layout
-      ☐ implement data visualization components
-      ☐ create interactive filters & controls
-      ☐ implement responsive design
-
-    authentication:
-      ☐ implement user authentication system
-      ☐ create user profile management
-      ☐ setup role-based access control
-
-  testing-phase:
-    ☐ setup pytest configuration
-    ☐ create database layer tests
-    ☐ create ETL pipeline tests
-    ☐ create dashboard component tests
+    project-discussion:
+      ☐ how we handle etl
+      ☐ how we handle data quality
+      ☐ how we handle data partitioning
 
 Archive:
   ✔ defining schemas @done(25-06-15 15:30) - moved to specific task above

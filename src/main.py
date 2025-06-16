@@ -1,249 +1,235 @@
-"""Main application entry point untuk ETL Dashboard dengan database & logging integration."""
+"""Main application entry point with clean state management.
 
-from datetime import datetime
-from typing import Any
+This module provides the main Streamlit application with proper initialization
+and state management to prevent re-initialization on reruns.
+"""
 
 import streamlit as st
-from loguru import logger
 
-from src.authentication import is_authenticated, show_login_form, show_user_info
-from src.config.logging.logging_config import log_activity, setup_logging
-from src.database import get_database_manager
-from src.navigation import run_navigation
+from shared.app_state import (
+    AppInitializer,
+    AppState,
+    clear_user_context,
+    get_user_context,
+    show_state_debug,
+)
 
 
-def setup_page_config() -> None:
-    """Setup Streamlit page configuration."""
-    if "page_config_initialized" in st.session_state:
-        return
+def page_config() -> None:
+    """Set the page configuration for the Streamlit app.
 
+    This function configures the layout, initial sidebar state, and menu items
+    for the Streamlit application.
+    """
     st.set_page_config(
         page_title="ETL Dashboard",
         page_icon="📊",
         layout="wide",
         initial_sidebar_state="expanded",
-    )
-    st.session_state.page_config_initialized = True
-    logger.info(f"=== Streamlit Page Config Initialized: {datetime.now()} ===")
-
-    # Activity logging - updated
-    log_activity(
-        "APP_CONFIG",
-        "Streamlit page configuration initialized",
-        page_title="ETL Dashboard",
-        layout="wide",
+        menu_items={
+            "Get Help": "https://docs.streamlit.io/library/get-help",
+            "About": "ETL Dashboard for Business Intelligence",
+        },
     )
 
 
-def setup_logging_system() -> dict[str, Any]:
-    """Setup logging system dengan comprehensive error handling."""
-    try:
-        success = setup_logging()
+def show_sidebar() -> None:
+    """Show sidebar with navigation and user context."""
+    with st.sidebar:
+        # Logo/branding
+        st.markdown("### 📊 ETL Dashboard")
+        st.markdown("---")
 
-        if success:
-            logger.info("=== Logging System Initialized Successfully ===")
-            log_activity("LOG_INIT", "Logging system initialized successfully")
-            return {"success": True, "errors": []}
-        else:
-            logger.error("Logging system initialization failed")
-            return {"success": False, "errors": ["Logging setup failed"]}
+        # User context
+        user = get_user_context()
+        if user["authenticated"]:
+            st.success(f"👤 Welcome, {user['username']}")
+            if user["is_admin"]:
+                st.badge("🔐 Admin")
 
-    except Exception as e:
-        logger.error(f"Critical logging setup error: {e}")
-        return {"success": False, "errors": [str(e)]}
-
-
-def setup_database_system() -> dict[str, Any]:
-    """Setup database system dengan graceful fallback."""
-    try:
-        # Initialize database manager
-        db_manager = get_database_manager()
-
-        # Get database info untuk health check
-        db_info = db_manager.get_database_info()
-
-        if "error" in db_info:
-            logger.error(f"Database system error: {db_info['error']}")
-            log_activity(
-                "DB_INIT_ERROR",
-                f"Database initialization failed: {db_info['error']}",
-                error=db_info["error"],
+            # Navigation for authenticated users
+            st.markdown("### 🧭 Navigation")
+            st.selectbox(
+                "Select Page:",
+                [
+                    "Dashboard",
+                    "ETL Pipeline",
+                    "Data View",
+                    "User Management",
+                    "Settings",
+                ],
+                key="selected_page",
             )
-            return {
-                "success": False,
-                "manager": None,
-                "error": db_info["error"],
-                "fallback": True,
-            }
 
-        # Store database manager di session state
-        st.session_state.db_manager = db_manager
-        st.session_state.db_info = db_info
-
-        logger.info("=== Database System Initialized Successfully ===")
-        log_activity(
-            "DB_INIT",
-            "Database system initialized successfully",
-            master_db_exists=db_info["master_database"]["file_exists"],
-            monthly_databases=len(db_info["monthly_databases"]),
-        )
-
-        return {"success": True, "manager": db_manager, "info": db_info}
-
-    except Exception as e:
-        logger.error(f"Database system initialization failed: {e}")
-        log_activity(
-            "DB_INIT_CRITICAL", f"Critical database error: {str(e)}", error=str(e)
-        )
-
-        return {"success": False, "manager": None, "error": str(e), "fallback": True}
-
-
-def setup_app_state() -> None:
-    """Setup application state dengan database integration."""
-    if "app_state_initialized" in st.session_state:
-        return
-
-    st.session_state.app_state_initialized = True
-    st.session_state.app_start_time = datetime.now()
-    st.session_state.app_initialized = True
-
-    logger.info("=== ETL Dashboard Application Started ===")
-
-    # Activity logging - updated
-    log_activity(
-        "APP_START",
-        "ETL Dashboard application started",
-        app_start_time=st.session_state.app_start_time.isoformat(),
-        session_id=st.session_state.get("session_id", "unknown"),
-    )
-
-
-def show_system_status() -> None:
-    """Show system status untuk debugging dan monitoring."""
-    if not st.session_state.get("show_system_status", False):
-        return
-
-    with st.sidebar.expander("🔧 System Status", expanded=False):
-        # Logging status
-        st.write("**Logging System:**")
-        st.success(
-            "✅ Active"
-        ) if "logging_initialized" in st.session_state else st.error("❌ Failed")
-
-        # Database status
-        st.write("**Database System:**")
-        if hasattr(st.session_state, "db_manager") and st.session_state.db_manager:
-            st.success("✅ Connected")
-            if hasattr(st.session_state, "db_info"):
-                db_info = st.session_state.db_info
-                st.caption(
-                    f"Master DB: {'✅' if db_info['master_database']['file_exists'] else '❌'}"
-                )
-                st.caption(f"Monthly DBs: {len(db_info['monthly_databases'])}")
+            # Logout button
+            st.markdown("---")
+            if st.button("🚪 Logout", use_container_width=True):
+                clear_user_context()
+                st.rerun()
         else:
-            st.warning("⚠️ Fallback Mode")
+            st.info("👋 Please login to access the dashboard")
 
-        # App uptime
-        if "app_start_time" in st.session_state:
-            uptime = datetime.now() - st.session_state.app_start_time
-            st.caption(f"Uptime: {uptime}")
+        # Debug section for business owner
+        st.markdown("---")
+        if st.checkbox("🔧 Show Debug Info"):
+            AppState.set_state("show_debug_info", True)
+        else:
+            AppState.set_state("show_debug_info", False)
 
 
-def handle_startup_errors(
-    log_status: dict[str, Any], db_status: dict[str, Any]
-) -> None:
-    """Handle startup errors dengan user-friendly messaging."""
-    has_errors = False
+def show_login_page() -> None:
+    """Show login page for unauthenticated users."""
+    st.title("🔐 Login")
+    st.markdown("Please login to access the ETL Dashboard")
 
-    # Logging errors
-    if not log_status["success"]:
-        st.error("⚠️ Logging system issues detected - check console for details")
-        has_errors = True
+    # TODO: Implement actual login form with auth_service
+    # For now, show placeholder
+    col1, col2, col3 = st.columns([1, 2, 1])
 
-        log_activity(
-            "STARTUP_ERROR",
-            "Logging system startup error",
-            errors=log_status.get("errors", []),
-        )
+    with col2:
+        st.markdown("### Login Form")
+        with st.form("login_form"):
+            username = st.text_input("Username", placeholder="Enter your username")
+            password = st.text_input(
+                "Password", type="password", placeholder="Enter your password"
+            )
 
-    # Database errors (non-critical)
-    if not db_status["success"] and not db_status.get("fallback", False):
-        st.error("❌ Database system failed to initialize")
-        has_errors = True
+            if st.form_submit_button("Login", use_container_width=True):
+                # TODO: Implement actual authentication
+                # For now, mock login for testing
+                if username == "admin" and password == "admin123":
+                    from shared.app_state import set_user_context
 
-    elif not db_status["success"] and db_status.get("fallback", False):
-        st.info("ℹ️ Running in development mode - some features may be limited")
+                    set_user_context("1", "admin", is_admin=True)
+                    st.success("Login successful!")
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials. Try admin/admin123 for testing.")
 
-    # Show system status toggle untuk debugging
-    if has_errors:
-        if st.sidebar.button("🔧 Show System Status"):
-            st.session_state.show_system_status = True
-            st.rerun()
+        st.markdown("---")
+        st.info("💡 **Test Credentials:**\nUsername: `admin`\nPassword: `admin123`")
+
+
+def show_dashboard() -> None:
+    """Show main dashboard for authenticated users."""
+    user = get_user_context()
+
+    st.title("📊 ETL Dashboard")
+    st.markdown(f"Welcome back, **{user['username']}**! 👋")
+
+    # Dashboard metrics
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("📁 Total Files", "0", "No change")
+
+    with col2:
+        st.metric("📊 Records Processed", "0", "No change")
+
+    with col3:
+        st.metric("⚡ Last ETL Run", "Never", "No data")
+
+    with col4:
+        st.metric("🟢 System Status", "Healthy", "All systems operational")
+
+    # Quick actions
+    st.markdown("### 🚀 Quick Actions")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button("📤 Upload CSV", use_container_width=True):
+            st.info("CSV upload feature coming soon!")
+
+    with col2:
+        if st.button("▶️ Run ETL", use_container_width=True):
+            st.info("ETL pipeline feature coming soon!")
+
+    with col3:
+        if st.button("📈 View Reports", use_container_width=True):
+            st.info("Reporting feature coming soon!")
+
+    # Recent activity placeholder
+    st.markdown("### 📋 Recent Activity")
+    st.info("No recent activity to display. Upload a CSV file to get started!")
+
+
+def show_debug_section() -> None:
+    """Show debug information for business owner."""
+    if AppState.get_state("show_debug_info", False):
+        with st.expander("🔧 Debug Information", expanded=True):
+            debug_info = show_state_debug()
+            st.json(debug_info)
+
+            # Additional debug controls
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("🔄 Refresh Debug Info"):
+                    st.rerun()
+
+            with col2:
+                if st.button("🗑️ Clear Session State"):
+                    # Clear non-essential state
+                    keys_to_keep = [
+                        AppState.LOG_CONFIGURED,
+                        AppState.DATABASE_INITIALIZED,
+                        AppState.APP_INITIALIZED,
+                    ]
+
+                    for key in list(st.session_state.keys()):
+                        if key not in keys_to_keep:
+                            del st.session_state[key]
+
+                    st.success(
+                        "Session state cleared (keeping essential initialization)"
+                    )
+                    st.rerun()
 
 
 def main() -> None:
-    """Main application entry point dengan comprehensive system integration."""
-    # Setup page config first
-    setup_page_config()
+    """Main function to run the Streamlit app with proper initialization."""
+    # Configure page first
+    page_config()
 
-    # Initialize logging system
-    log_status = setup_logging_system()
+    # Initialize application stack (one-time only)
+    if not AppInitializer.initialize_app():
+        st.error("❌ Failed to initialize application. Please check logs.")
+        st.code("Check the terminal/console for detailed error messages.")
+        st.stop()
 
-    # Initialize database system
-    db_status = setup_database_system()
+    # Show sidebar
+    show_sidebar()
 
-    # Setup application state
-    setup_app_state()
+    # Main content based on authentication status
+    user = get_user_context()
 
-    # Handle any startup errors
-    handle_startup_errors(log_status, db_status)
+    if not user["authenticated"]:
+        # Show login page
+        show_login_page()
+    else:
+        # Show authenticated content
+        selected_page = AppState.get_state("selected_page", "Dashboard")
 
-    # Show system status jika diminta
-    show_system_status()
+        if selected_page == "Dashboard":
+            show_dashboard()
+        elif selected_page == "ETL Pipeline":
+            st.title("📤 ETL Pipeline")
+            st.info("ETL Pipeline features coming soon!")
+        elif selected_page == "Data View":
+            st.title("📊 Data View")
+            st.info("Data visualization features coming soon!")
+        elif selected_page == "User Management":
+            st.title("👥 User Management")
+            if user["is_admin"]:
+                st.info("User management features coming soon!")
+            else:
+                st.error("Admin access required for user management.")
+        elif selected_page == "Settings":
+            st.title("⚙️ Settings")
+            st.info("Settings features coming soon!")
 
-    # Authentication check
-    if not is_authenticated():
-        log_activity(
-            "AUTH_REQUIRED", "User authentication required", authenticated=False
-        )
-        show_login_form()
-        return
-
-    # Log successful authentication
-    username = st.session_state.get("username", "unknown")
-    log_activity(
-        "AUTH_SUCCESS",
-        f"User {username} authenticated successfully",
-        username=username,
-        authenticated=True,
-    )
-
-    # Show user info dalam sidebar
-    show_user_info()
-
-    # Run main navigation system
-    try:
-        run_navigation()
-    except Exception as e:
-        logger.error(f"Navigation system failed: {e}")
-        log_activity(
-            "NAV_CRITICAL",
-            f"Navigation system critical failure: {str(e)}",
-            error=str(e),
-        )
-
-        st.error("❌ Navigation system encountered a critical error")
-        st.exception(e)
-
-        # Provide fallback navigation
-        if st.button("🔄 Restart Application"):
-            # Clear relevant session state
-            keys_to_clear = ["nav_manager", "navigation_manager_initialized"]
-            for key in keys_to_clear:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.rerun()
+    # Debug section (always available for business owner)
+    show_debug_section()
 
 
 if __name__ == "__main__":

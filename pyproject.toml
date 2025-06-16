@@ -18,6 +18,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "allure-pytest>=2.14.3",
     "pre-commit>=4.2.0",
     "pytest>=8.4.0",
     "pytest-cov>=6.2.1",
@@ -78,7 +79,8 @@ skip_empty = true
 
 
 [tool.pytest.ini_options]
-testpaths = ["tests"] # Only scan tests directory
+generate_report_on_test = true
+testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -87,28 +89,33 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    "--no-header",                            # 🆕 Cleaner VSCode output
+    "--disable-warnings",                     # 🆕 Less noise in test explorer
     "--cov=src",
     "--cov-report=html:.reports/coverage",
-    "--cov-report=term-missing",
+    "--cov-report=term-missing:skip-covered", # 🆕 Less verbose coverage
     "--html=.reports/tests/report.html",
     "--self-contained-html",
-
+     "--alluredir=.reports/allure" # 🆕 Allure report directory biar keren
 ]
+
+# 🆕 VSCode-friendly logging (less verbose)
+log_cli = false                                                       # Changed from true - less noise in test explorer
+log_cli_level = "WARNING"                                             # Changed from DEBUG
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+log_auto_indent = true
+
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "config: Configuration system tests",
+    "auth: Authentication system tests",                           # 🆕 For your auth tests
 ]
+
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
 ]
-
-# ✅ Enhanced logging with colors
-log_cli = true
-log_cli_level = "DEBUG"
-log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
-log_auto_indent = true
 
 
 # ✅ Minimum version requirements
@@ -133,10 +140,10 @@ norecursedirs = [
 target-version = "py312"
 line-length = 88
 src = ["src"]
-fixable = ["ALL"]
-unfixable = []
+lint.fixable = ["ALL"]
+lint.unfixable = []
 
-select = [
+lint.select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
     "F",   # pyflakes
@@ -146,7 +153,7 @@ select = [
     "UP",  # pyupgrade (modern Python syntax)
     "B",   # flake8-bugbear (common bugs)
 ]
-ignore = [
+lint.ignore = [
     "E501",   # line too long (handled by formatter)
     "D100",   # Missing docstring in public module
     "D104",   # Missing docstring in public package
@@ -155,6 +162,10 @@ ignore = [
     "ANN204", # Missing return type annotation for special method `__init__`
     "ANN002", # Missing type annotation for `*args`
     "ANN003", # Missing type annotation for `**kwargs`
+    "ANN202", # Missing type annotation for `self`
+    "ANN201", # Missing type annotation for `cls`
+    "D101",   # Missing docstring in public class
+    "D102",   # Missing docstring in public method
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -162,9 +173,10 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D", "ANN"]
+"src/deprecated/*" = ["ALL"]
 "scripts/*" = ["D100"]
 "__init__.py" = ["D104"]
-"_version/*" = ["D", "ANN", "E", "W", "F", "I", "UP", "B"]
+"_version.py" = ["D", "ANN", "E", "W", "F", "I", "UP", "B"]
 
 [tool.ruff.format]
 quote-style = "double"
