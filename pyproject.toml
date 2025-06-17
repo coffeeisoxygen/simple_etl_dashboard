@@ -10,7 +10,6 @@ dependencies = [
     "openpyxl>=3.1.5",
     "plotly>=6.1.2",
     "pygwalker>=0.4.9.15",
-    "python-dotenv>=1.1.0",
     "sqlalchemy>=2.0.41",
     "st-gsheets-connection>=0.1.0",
     "stqdm>=0.0.5",

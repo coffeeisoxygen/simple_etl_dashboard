@@ -1,8 +1,8 @@
 """Simple ETL Dashboard - Streamlit Official Pattern Entry Point."""
 
 import streamlit as st
-from config.app_setup import configure_page, setup_app
 
+from app_setup import configure_page, setup_app
 from schemas.auth.request import LoginRequest
 from services.auth_manager import get_auth_manager
 
