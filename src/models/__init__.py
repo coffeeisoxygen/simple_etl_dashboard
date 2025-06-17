@@ -1,14 +1,17 @@
-"""Models package with all database models."""
+"""Models package initialization.
+
+Exposes all database models and base classes for clean imports.
+Follows the principle of making internal modules easy to import.
+"""
 
 from .base import Base
-from .user_model import User  # ✅ FIXED: Import from user_model, not user
+from .user_model import User
 
-# Export all models for easy importing
+# Main exports - what other modules should import
 __all__ = [
     "Base",
     "User",
 ]
 
-# FUTURE: Add ETL models here
-# from .retailer import Retailer
-# from .transaction import Transaction
+# TODO: Add other models here as they are created (ETL jobs, data sources, etc.)
+# REMINDER: Keep this file updated when adding new models

@@ -1,5 +1,3 @@
-"""User model following SQLAlchemy v2 best practices."""
-
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Integer, String, func
@@ -9,21 +7,18 @@ from .base import Base
 
 
 class User(Base):
-    """User model for application authentication and authorization.
-
-    Following SQLAlchemy v2 declarative style with proper type annotations.
-    """
-
     __tablename__ = "users"
 
-    # Primary key
     id: Mapped[int] = mapped_column(
         Integer, primary_key=True, comment="User primary key"
     )
 
-    # Required fields
     username: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False, comment="Unique username for login"
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True,
+        comment="Unique username for login",
     )
 
     name: Mapped[str] = mapped_column(
@@ -34,7 +29,6 @@ class User(Base):
         String(255), nullable=False, comment="Bcrypt hashed password"
     )
 
-    # Boolean fields with defaults
     is_admin: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, comment="Admin privileges flag"
     )
@@ -43,18 +37,37 @@ class User(Base):
         Boolean, default=True, nullable=False, comment="Account active status"
     )
 
-    # Timestamp - FIXED: Use server_default for proper timestamp
-    tgl_data: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        server_default=func.current_timestamp(),  # ✅ FIXED: Use SQL function, not Python
+        server_default=func.current_timestamp(),
         nullable=False,
         comment="Record creation timestamp",
     )
 
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+        comment="Record last update timestamp",
+    )
+
     def __repr__(self) -> str:
-        """String representation for debugging."""
+        """String representation for debugging.
+
+        Extended summary can include more details about the object state.
+
+        Returns:
+            str: A string representation of the User object.
+        """
         return f"<User(id={self.id}, username='{self.username}', name='{self.name}')>"
 
     def __str__(self) -> str:
-        """Human-readable string representation."""
+        """Human-readable string representation.
+
+        Extended summary can include more details about the object state.
+
+        Returns:
+            str: A human-readable string representation of the User object.
+        """
         return f"{self.name} ({self.username})"

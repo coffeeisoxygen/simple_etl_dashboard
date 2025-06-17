@@ -20,33 +20,39 @@
         }
     },
     "autoDocstring.docstringFormat": "google",
-    "python.analysis.typeCheckingMode": "standard",
-    // 🔧 Pylance Configuration - Focus on project scope
+    // 🔧 Pylance Configuration - Optimized for performance
+    "python.analysis.typeCheckingMode": "off", // Disable type checking for faster performance
     "python.analysis.autoSearchPaths": false,
     "python.analysis.extraPaths": [
-        "./src"
+        "./src",
+        "./tests" // Include tests if needed
     ],
     "python.analysis.exclude": [
-        "**/src/deprecated/**",
-        "**/node_modules/**",
         "**/.venv/**",
         "**/venv/**",
         "**/__pycache__/**",
-        "**/.pytest_cache/**"
+        "**/.pytest_cache/**",
+        "**/src/deprecated/**",
+        "**/node_modules/**",
+        "**/site-packages/**" // Explicitly exclude site-packages
     ],
     "python.analysis.ignore": [
+        "**/.venv/**",
+        "**/venv/**",
         "**/src/deprecated/**"
     ],
     "python.analysis.useLibraryCodeForTypes": false,
     "python.analysis.indexing": false,
+    "python.analysis.diagnosticMode": "openFilesOnly", // Analyze only open files
+    "python.analysis.stubPath": "", // Disable default stub path
     "python.analysis.packageIndexDepths": [
         {
             "name": "",
-            "depth": 2,
+            "depth": 1, // Reduce indexing depth
             "includeAllSymbols": false
         }
     ],
-    // 🧪 Testing Configuration - Enhanced for VSCode Test Explorer
+    // 🧪 Testing Configuration
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": [
@@ -62,19 +68,21 @@
     "python.testing.pytestPath": "./.venv/Scripts/pytest.exe",
     // 📁 Files and Search Configuration
     "files.exclude": {
+        "**/.venv": true,
+        "**/venv": true,
         "**/__pycache__": true,
         "**/.pytest_cache": true,
         "**/src/deprecated": true,
-        "**/.reports": false // Show reports for debugging
+        "**/.reports": false
     },
     "search.exclude": {
-        "**/src/deprecated": true,
+        "**/.venv": true,
+        "**/venv": true,
         "**/__pycache__": true,
         "**/.pytest_cache": true,
-        "**/venv": true,
-        "**/.venv": true
+        "**/src/deprecated": true
     },
-    // ✨ Todo+ Configuration - unchanged
+    // ✨ Todo+ Configuration (unchanged)
     "todo.file.name": "projects.todo",
     "todo.file.defaultContent": "\nindosat_salesdashboard:\n\n  preparation-phase:\n    ☐ New task\n",
     "todo.symbols.box": "☐",

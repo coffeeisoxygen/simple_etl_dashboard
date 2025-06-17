@@ -149,7 +149,7 @@ class SmartLoggingConfig:
     TERMINAL_FORMAT = (
         "<green>{time:HH:mm:ss}</green> | "
         "<level>{level:<8}</level> | "
-        "<cyan>{name}</cyan>:<blue>{function}</blue> | "
+        "<cyan>{name}</cyan>:<blue>{function}-{line}</blue> | "
         "<level>{message}</level>"
     )
 
