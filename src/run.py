@@ -1,8 +1,4 @@
-"""Simple ETL Dashboard - Main Application Entry Point.
-
-Clean entry point dengan proper authentication routing dan minimal setup.
-Uses established service patterns untuk database dan user management.
-"""
+"""Simple ETL Dashboard - Main Application Entry Point."""
 
 import sys
 from pathlib import Path
@@ -13,18 +9,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 import streamlit as st
 from loguru import logger
 
-from db.database import get_database_status, initialize_database
-from log_setup import setup_smart_logging  # ← FIXED import path
+from db.database import initialize_database
+from log_setup import setup_smart_logging
 from pages.auth.pg_auth import render_auth_page
 from services.user_state import UserState
 
 
 def setup_app() -> bool:
-    """Setup aplikasi: logging dan database initialization.
-
-    Returns:
-        True jika setup berhasil, False jika gagal
-    """
+    """Setup aplikasi: logging dan database initialization."""
     # Setup logging (once per session)
     if "logging_setup" not in st.session_state:
         try:
@@ -32,92 +24,59 @@ def setup_app() -> bool:
             st.session_state.logging_setup = True
             logger.info("✅ Logging configured")
         except Exception as e:
-            st.error(f"Logging setup failed: {e}")
+            st.error(f"❌ Logging setup failed: {e}")
             return False
 
     # Setup database (once per session)
     if "db_setup" not in st.session_state:
         try:
-            logger.info("Initializing database...")
-
+            logger.info("🔄 Initializing database...")
             if initialize_database():
                 st.session_state.db_setup = True
                 logger.info("✅ Database initialized")
             else:
                 st.error("❌ Database initialization failed")
                 return False
-
         except Exception as e:
-            st.error(f"Database setup failed: {e}")
+            st.error(f"❌ Database setup failed: {e}")
             logger.error(f"Database error: {e}")
             return False
 
     return True
 
 
-def render_authenticated_app() -> None:
-    """Render main application untuk authenticated users."""
+def logout():
+    """Logout page function."""
     user_state = UserState()
 
-    st.title("🚀 ETL Dashboard")
+    st.title("🚪 Logout")
 
-    # Welcome message
-    st.success(f"Selamat datang, {user_state.get_user_name()}!")
+    # Show current user info
+    col1, col2 = st.columns([1, 2])
 
-    # Basic navigation tabs
-    tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "📁 ETL Tools", "⚙️ Settings"])
+    with col1:
+        st.info("**Current Session:**")
+        st.write(f"👤 **User:** {user_state.get_user_name()}")
+        st.write(f"🔑 **Role:** {'Admin' if user_state.is_admin() else 'User'}")
 
-    with tab1:
-        st.header("📊 Dashboard")
-        st.info("Main dashboard akan diimplementasikan di sini")
+        if login_time := user_state.get_login_timestamp():
+            st.write(f"⏰ **Login:** {login_time.strftime('%H:%M:%S')}")
 
-        # Quick stats
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Status", "Ready")
-        with col2:
-            st.metric("Role", "Admin" if user_state.is_admin() else "User")
+    with col2:
+        st.warning("⚠️ Anda akan keluar dari sistem")
+        st.markdown("Klik tombol di bawah untuk logout:")
 
-    with tab2:
-        st.header("📁 ETL Tools")
-        st.info("CSV upload dan processing tools akan diimplementasikan di sini")
-
-        # Placeholder untuk ETL features
-        st.write("**Fitur yang akan datang:**")
-        st.write("- CSV File Upload")
-        st.write("- Data Validation")
-        st.write("- Data Transformation")
-        st.write("- Database Storage")
-        st.write("- Data Visualization")
-
-    with tab3:
-        st.header("⚙️ Settings")
-
-        # User settings
-        st.subheader("👤 User Settings")
-        with st.expander("User Information"):
-            st.write(f"**Username:** {user_state.get_username()}")
-            st.write(f"**Name:** {user_state.get_user_name()}")
-            st.write(f"**Role:** {'Admin' if user_state.is_admin() else 'User'}")
-
-        # Admin tools
-        if user_state.is_admin():
-            st.subheader("🔧 Admin Tools")
-            if st.button("📊 Database Health Check"):
-                with st.spinner("Checking database health..."):
-                    health = get_database_status()
-                    if health.get("status") == "healthy":
-                        st.success("✅ Database is healthy!")
-                    else:
-                        st.error("❌ Database has issues!")
-
-                    with st.expander("Detailed Health Info"):
-                        st.json(health)
+        # Logout button
+        if st.button("🚪 Confirm Logout", type="primary", use_container_width=True):
+            user_state.logout_user()
+            st.success("👋 Logout berhasil!")
+            st.balloons()  # Fun animation
+            st.rerun()
 
 
 def main() -> None:
-    """Main application entry point dengan authentication routing."""
-    # App configuration - MUST BE FIRST STREAMLIT COMMAND
+    """Main entry point following Streamlit docs pattern."""
+    # Page configuration
     st.set_page_config(
         page_title="ETL Dashboard",
         page_icon="📊",
@@ -125,27 +84,127 @@ def main() -> None:
         initial_sidebar_state="expanded",
     )
 
-    # Setup app infrastructure
+    # Infrastructure setup
     if not setup_app():
-        st.error("❌ App initialization failed")
+        st.error("❌ Application failed to initialize")
         st.stop()
 
-    # Authentication routing
+    # Initialize user state
     user_state = UserState()
 
-    if not user_state.is_authenticated():
-        # Show authentication page
-        render_auth_page()
-    else:
-        # Show main application
-        render_authenticated_app()
+    # ✅ FOLLOWING STREAMLIT DOCS PATTERN
+    # Define pages
+    login_page = st.Page(render_auth_page, title="Login", icon=":material/login:")
+    logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 
-        # Logout option in sidebar
-        with st.sidebar:
-            st.markdown("---")
-            if st.button("🚪 Logout", key="sidebar_logout"):
-                user_state.logout_user()
-                st.rerun()
+    # Dashboard
+    dashboard = st.Page(
+        "pages/dashboard/pg_dashboard.py",
+        title="Dashboard",
+        icon=":material/dashboard:",
+        default=True,
+    )
+    analytics = st.Page(
+        "pages/analytics/pg_analytics.py",
+        title="Analytics",
+        icon=":material/analytics:",
+    )
+
+    # Reports
+    transaction = st.Page(
+        "pages/reports/pg_transaksi.py",
+        title="Transaction Report",
+        icon=":material/receipt:",
+    )
+    sellin = st.Page(
+        "pages/reports/pg_sellin.py",
+        title="Sell-in Report",
+        icon=":material/trending_up:",
+    )
+    visit = st.Page(
+        "pages/reports/pg_visit.py",
+        title="Visit Report",
+        icon=":material/person_pin_circle:",
+    )
+    transfer = st.Page(
+        "pages/reports/pg_transfer.py",
+        title="Transfer Report",
+        icon=":material/swap_horiz:",
+    )
+    rgu = st.Page(
+        "pages/reports/pg_rgu.py", title="RGU Report", icon=":material/assessment:"
+    )
+
+    # Master Data
+    site = st.Page(
+        "pages/master/pg_site.py",
+        title="Site Management",
+        icon=":material/location_on:",
+    )
+    retailer = st.Page(
+        "pages/master/pg_retailer.py",
+        title="Retailer Management",
+        icon=":material/store:",
+    )
+    territory = st.Page(
+        "pages/master/pg_territory.py",
+        title="Territory Management",
+        icon=":material/map:",
+    )
+    allocation = st.Page(
+        "pages/master/pg_allocation.py",
+        title="Allocation Management",
+        icon=":material/grid_view:",
+    )
+    business_info = st.Page(
+        "pages/master/pg_bussines_info.py",
+        title="Business Info",
+        icon=":material/business:",
+    )
+
+    # Tools
+    upload = st.Page(
+        "pages/tools/pg_etls_tools.py", title="Data Upload", icon=":material/upload:"
+    )
+
+    # Info
+    glossarium = st.Page(
+        "pages/info/pg_glossarium.py", title="Glossarium", icon=":material/book:"
+    )
+
+    # Account
+    profile = st.Page(
+        "pages/account/pg_profile.py", title="Profile", icon=":material/person:"
+    )
+
+    # Admin (only for admin users)
+    settings = st.Page(
+        "pages/admin/pg_sys_settings.py", title="Settings", icon=":material/settings:"
+    )
+
+    # ✅ NAVIGATION SETUP - FOLLOWING DOCS PATTERN
+    if user_state.is_authenticated():
+        # Build navigation based on user permissions
+        nav_structure = {
+            "Account": [logout_page],
+            "Dashboard": [dashboard, analytics],
+            "Reports": [transaction, sellin, visit, transfer, rgu],
+            "Master Data": [site, retailer, territory, allocation, business_info],
+            "Tools": [upload],
+            "Info": [glossarium, profile],
+        }
+
+        # Add admin section if admin
+        if user_state.is_admin():
+            nav_structure["Admin"] = [settings]
+
+        pg = st.navigation(nav_structure)
+    else:
+        # Only show login page
+        pg = st.navigation([login_page])
+
+    # Run the navigation
+    pg.run()
 
 
 if __name__ == "__main__":

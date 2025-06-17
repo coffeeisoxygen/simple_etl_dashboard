@@ -63,9 +63,9 @@ class UserState:
     def login_user(self, user_data: LoginResponse) -> None:
         """Set user session data after successful login."""
         st.session_state["is_authenticated"] = True
-        st.session_state["user_id"] = user_data.id  # ← FIX
+        st.session_state["user_id"] = user_data.id
         st.session_state["username"] = user_data.username
-        st.session_state["user_name"] = user_data.name  # ← FIX
+        st.session_state["user_name"] = user_data.name
         st.session_state["is_admin"] = user_data.is_admin
         st.session_state["is_active"] = user_data.is_active
         st.session_state["login_timestamp"] = datetime.now()
@@ -75,6 +75,10 @@ class UserState:
         for key in SESSION_KEYS.keys():
             if key in st.session_state:
                 del st.session_state[key]
+
+    def logout(self) -> None:
+        """Convenience method - alias for logout_user."""
+        self.logout_user()
 
     def require_auth(self) -> None:
         """Guard function to ensure user is authenticated."""

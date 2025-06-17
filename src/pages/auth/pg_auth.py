@@ -1,8 +1,4 @@
-"""Authentication page with proper service integration.
-
-Handles login/logout functionality using established auth service
-and user state management patterns.
-"""
+"""Authentication page with clean, focused authentication logic."""
 
 import streamlit as st
 from loguru import logger
@@ -13,12 +9,13 @@ from services.auth_service import login as auth_login
 from services.user_state import UserState
 
 
+@st.fragment
 def render_login_form() -> None:
     """Display login form and handle authentication."""
     st.title("🔐 Login")
     st.markdown("Masukkan kredensial Anda untuk mengakses sistem")
 
-    with st.form("login_form", clear_on_submit=True):
+    with st.form("login_form", clear_on_submit=False):
         username = st.text_input(
             "Username", placeholder="Masukkan username", help="Default admin: admin"
         )
@@ -37,22 +34,24 @@ def render_login_form() -> None:
                 return
 
             try:
-                # Use proper auth service
-                login_request = LoginRequest(username=username, password=password)
-                user_repo = SQLUserRepository()
+                # Show loading state
+                with st.spinner("🔄 Memverifikasi kredensial..."):
+                    # Use proper auth service
+                    login_request = LoginRequest(username=username, password=password)
+                    user_repo = SQLUserRepository()
 
-                # Authenticate user
-                user_response = auth_login(login_request, user_repo)
+                    # Authenticate user
+                    user_response = auth_login(login_request, user_repo)
 
-                # Update session state via UserState
-                user_state = UserState()
-                user_state.login_user(user_response)
+                    # Update session state via UserState
+                    user_state = UserState()
+                    user_state.login_user(user_response)
 
                 # Success feedback
                 st.success(f"✅ Login berhasil! Selamat datang, {user_response.name}")
                 logger.info(f"User logged in: {user_response.username}")
 
-                # Trigger rerun to show authenticated state
+                # ✅ IMMEDIATE REDIRECT - no delay, no complex state
                 st.rerun()
 
             except ValueError as e:
@@ -63,84 +62,30 @@ def render_login_form() -> None:
                 logger.error(f"Login error: {e}")
 
 
-def render_logout_section() -> None:
-    """Display logout section for authenticated users."""
-    user_state = UserState()
-
-    # Display user info
-    st.success(f"✅ Anda sudah login sebagai: **{user_state.get_user_name()}**")
-
-    # User info in expander
-    with st.expander("ℹ️ Informasi User", expanded=False):
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.write(f"**Username:** {user_state.get_username()}")
-            st.write(f"**User ID:** {user_state.get_user_id()}")
-
-        with col2:
-            st.write(f"**Role:** {'Admin' if user_state.is_admin() else 'User'}")
-            st.write(
-                f"**Status:** {'Aktif' if user_state.is_active() else 'Tidak Aktif'}"
-            )
-
-        if login_time := user_state.get_login_timestamp():
-            st.write(f"**Login pada:** {login_time.strftime('%d/%m/%Y %H:%M:%S')}")
-
-    # Logout button
-    st.markdown("---")
-
-    col1, col2, _ = st.columns([1, 2, 1])
-    with col2:
-        if st.button("🚪 Logout", use_container_width=True, type="secondary"):
-            try:
-                username = user_state.get_username()
-                user_state.logout_user()
-
-                st.success("✅ Logout berhasil!")
-                logger.info(f"User logged out: {username}")
-
-                # Clear any cached data and rerun
-                st.cache_data.clear()
-                st.rerun()
-
-            except Exception as e:
-                st.error("❌ Terjadi kesalahan saat logout")
-                logger.error(f"Logout error: {e}")
-
-
 def render_auth_page() -> None:
-    """Main authentication page renderer.
-
-    Dynamically shows login form or logout section based on authentication status.
-
-    NOTE: Page config is handled at app level, not page level
-    """
+    """Clean authentication page - ONLY handles login."""
     user_state = UserState()
 
-    # Check authentication status
-    if not user_state.is_authenticated():
-        # Show login form
-        render_login_form()
+    # ✅ SIMPLE: Just check if authenticated
+    if user_state.is_authenticated():
+        # User sudah login, redirect
+        st.info("🔄 Already logged in, redirecting...")
+        st.rerun()
+        return
 
-        # Login help
-        with st.expander("💡 Bantuan Login"):
-            st.info(
-                """
-                **Kredensial Default:**
-                - Username: `admin`
-                - Password: `admin123`
+    # Show login form
+    render_login_form()
 
-                **Catatan:**
-                - Akun admin dibuat otomatis saat aplikasi pertama kali dijalankan
-                - Hubungi administrator jika mengalami masalah login
-                """
-            )
-    else:
-        # Show authenticated user section
-        st.title("🏠 Dashboard")
-        render_logout_section()
+    # Login help (static content)
+    with st.expander("💡 Bantuan Login"):
+        st.info(
+            """
+            **Kredensial Default:**
+            - Username: `admin`
+            - Password: `admin123`
 
-        # Navigation hint
-        st.markdown("---")
-        st.info("✨ Gunakan navigasi untuk mengakses fitur-fitur aplikasi")
+            **Catatan:**
+            - Akun admin dibuat otomatis saat aplikasi pertama kali dijalankan
+            - Hubungi administrator jika mengalama masalah login
+            """
+        )
