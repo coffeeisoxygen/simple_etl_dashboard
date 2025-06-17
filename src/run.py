@@ -47,7 +47,6 @@ def setup_app() -> bool:
 
 def render_session_sidebar() -> None:
     """Render session information and timeout warnings in sidebar."""
-    # ✅ NEW: Session timeout management in sidebar
     auth_manager = get_auth_manager()
 
     with st.sidebar:
@@ -130,8 +129,8 @@ def main() -> None:
     st.set_page_config(
         page_title="ETL Dashboard",
         page_icon="📊",
-        layout="wide",
-        initial_sidebar_state="expanded",
+        layout="centered",
+        initial_sidebar_state="auto",
     )
 
     # Infrastructure setup
