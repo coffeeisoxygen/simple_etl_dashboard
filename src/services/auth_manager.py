@@ -81,7 +81,6 @@ class AuthManager:
             return None
 
         try:
-            # ✅ FIX: Add null checks before LoginResponse construction
             user_id = self.user_state.get_user_id()
             username = self.user_state.get_username()
             user_name = self.user_state.get_user_name()
@@ -240,7 +239,6 @@ class AuthManager:
             "is_active": bool,
         }
 
-        # ✅ FIX: Proper validation for boolean values
         return all(k in data and isinstance(data[k], t) for k, t in required.items())
 
     def _prepare_session_data(self, user: LoginResponse) -> dict[str, Any]:
