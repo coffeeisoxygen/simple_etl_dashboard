@@ -12,7 +12,7 @@ from loguru import logger
 from db.database import initialize_database
 from log_setup import setup_smart_logging
 from pages.auth.pg_auth import render_auth_page
-from services.user_state import UserState
+from services.auth_manager import get_auth_manager  # ✅ NEW: Replace UserState import
 
 
 def setup_app() -> bool:
@@ -45,9 +45,54 @@ def setup_app() -> bool:
     return True
 
 
+def render_session_sidebar() -> None:
+    """Render session information and timeout warnings in sidebar."""
+    # ✅ NEW: Session timeout management in sidebar
+    auth_manager = get_auth_manager()
+
+    with st.sidebar:
+        st.markdown("---")
+
+        # Show current user info
+        current_user = auth_manager.get_current_user()
+        if current_user:
+            st.markdown(f"**👤 Logged in as:** {current_user.name}")
+            if current_user.is_admin:
+                st.markdown("🔑 **Admin User**")
+
+        # ✅ NEW: Session timeout warning with extend option
+        timeout_warning = auth_manager.check_session_timeout_warning()
+        if timeout_warning:
+            st.warning(f"⏰ {timeout_warning}")
+
+            # Allow user to extend session
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button(
+                    "🔄 Extend", use_container_width=True, help="Extend session"
+                ):
+                    if auth_manager.extend_session():
+                        st.success("Session extended!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to extend")
+
+            with col2:
+                if st.button("🚪 Logout", use_container_width=True, help="Logout now"):
+                    auth_manager.logout_with_cleanup()
+                    st.rerun()
+
+
 def logout():
-    """Logout page function."""
-    user_state = UserState()
+    """Logout page function with AuthManager integration."""
+    # ✅ CHANGED: Use AuthManager instead of UserState
+    auth_manager = get_auth_manager()
+    current_user = auth_manager.get_current_user()
+
+    if not current_user:
+        # User not authenticated, redirect to login
+        st.switch_page("pages/auth/pg_auth.py")
+        return
 
     st.title("🚪 Logout")
 
@@ -56,19 +101,24 @@ def logout():
 
     with col1:
         st.info("**Current Session:**")
-        st.write(f"👤 **User:** {user_state.get_user_name()}")
-        st.write(f"🔑 **Role:** {'Admin' if user_state.is_admin() else 'User'}")
+        st.write(f"👤 **User:** {current_user.name}")
+        st.write(f"🔑 **Role:** {'Admin' if current_user.is_admin else 'User'}")
 
-        if login_time := user_state.get_login_timestamp():
-            st.write(f"⏰ **Login:** {login_time.strftime('%H:%M:%S')}")
+        # ✅ NEW: Show session timeout info
+        timeout_info = auth_manager.get_session_timeout_info()
+        if timeout_info:
+            st.write(
+                f"⏰ **Session:** {timeout_info['time_remaining_minutes']} min left"
+            )
 
     with col2:
         st.warning("⚠️ Anda akan keluar dari sistem")
         st.markdown("Klik tombol di bawah untuk logout:")
 
-        # Logout button
+        # Logout button with proper cleanup
         if st.button("🚪 Confirm Logout", type="primary", use_container_width=True):
-            user_state.logout_user()
+            # ✅ CHANGED: Use AuthManager for proper cleanup
+            auth_manager.logout_with_cleanup()
             st.success("👋 Logout berhasil!")
             st.balloons()  # Fun animation
             st.rerun()
@@ -89,8 +139,8 @@ def main() -> None:
         st.error("❌ Application failed to initialize")
         st.stop()
 
-    # Initialize user state
-    user_state = UserState()
+    # ✅ CHANGED: Use AuthManager instead of UserState
+    auth_manager = get_auth_manager()
 
     # ✅ FOLLOWING STREAMLIT DOCS PATTERN
     # Define pages
@@ -183,7 +233,14 @@ def main() -> None:
     )
 
     # ✅ NAVIGATION SETUP - FOLLOWING DOCS PATTERN
-    if user_state.is_authenticated():
+    # ✅ CHANGED: Use AuthManager with auto-restore capability
+    if auth_manager.is_authenticated():  # This automatically tries cookie restore!
+        # ✅ NEW: Show session management in sidebar
+        render_session_sidebar()
+
+        # Get current user for permission checking
+        current_user = auth_manager.get_current_user()
+
         # Build navigation based on user permissions
         nav_structure = {
             "Account": [logout_page],
@@ -195,7 +252,7 @@ def main() -> None:
         }
 
         # Add admin section if admin
-        if user_state.is_admin():
+        if current_user and current_user.is_admin:
             nav_structure["Admin"] = [settings]
 
         pg = st.navigation(nav_structure)
@@ -209,3 +266,9 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# TODO: Add proper error handling for navigation failures
+# PINNED: Consider adding breadcrumb navigation for better UX
+# REMINDER: AuthManager handles auto-restore from cookies on app start
+# NOTE: Session timeout warnings appear in sidebar when user is authenticated

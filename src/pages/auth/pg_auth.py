@@ -3,89 +3,68 @@
 import streamlit as st
 from loguru import logger
 
-from repositories.auth.sql_user_repository import SQLUserRepository
 from schemas.auth.request import LoginRequest
-from services.auth_service import login as auth_login
-from services.user_state import UserState
+from services.auth_manager import get_auth_manager  # ✅ NEW IMPORT
 
 
 @st.fragment
 def render_login_form() -> None:
-    """Display login form and handle authentication."""
-    st.title("🔐 Login")
-    st.markdown("Masukkan kredensial Anda untuk mengakses sistem")
+    """Render login form with validation and authentication."""
+    st.subheader("🔐 Login")
 
     with st.form("login_form", clear_on_submit=False):
-        username = st.text_input(
-            "Username", placeholder="Masukkan username", help="Default admin: admin"
-        )
+        username = st.text_input("Username", placeholder="Enter your username")
         password = st.text_input(
-            "Password",
-            type="password",
-            placeholder="Masukkan password",
-            help="Default password: admin123",
+            "Password", type="password", placeholder="Enter your password"
         )
-
-        submitted = st.form_submit_button("🚀 Login", use_container_width=True)
+        submitted = st.form_submit_button("Login", use_container_width=True)
 
         if submitted:
             if not username or not password:
-                st.error("❌ Username dan password harus diisi")
+                st.error("Please enter both username and password")
                 return
 
             try:
-                # Show loading state
-                with st.spinner("🔄 Memverifikasi kredensial..."):
-                    # Use proper auth service
-                    login_request = LoginRequest(username=username, password=password)
-                    user_repo = SQLUserRepository()
+                # ✅ CHANGED: Use AuthManager instead of direct auth_service
+                auth_manager = get_auth_manager()
+                login_request = LoginRequest(username=username, password=password)
 
-                    # Authenticate user
-                    user_response = auth_login(login_request, user_repo)
+                # This will handle login + cookie persistence automatically
+                user_response = auth_manager.login_with_persistence(login_request)
 
-                    # Update session state via UserState
-                    user_state = UserState()
-                    user_state.login_user(user_response)
-
-                # Success feedback
-                st.success(f"✅ Login berhasil! Selamat datang, {user_response.name}")
-                logger.info(f"User logged in: {user_response.username}")
-
-                # ✅ IMMEDIATE REDIRECT - no delay, no complex state
-                st.rerun()
+                st.success(f"Welcome, {user_response.name}!")
+                st.rerun()  # Refresh to show dashboard
 
             except ValueError as e:
-                st.error(f"❌ Login gagal: {str(e)}")
-                logger.warning(f"Failed login attempt for username: {username}")
+                st.error(f"Login failed: {str(e)}")
+                logger.warning(f"Login attempt failed for username: {username}")
             except Exception as e:
-                st.error("❌ Terjadi kesalahan sistem. Silakan coba lagi.")
-                logger.error(f"Login error: {e}")
+                st.error("An unexpected error occurred. Please try again.")
+                logger.error(f"Unexpected login error: {e}")
 
 
 def render_auth_page() -> None:
-    """Clean authentication page - ONLY handles login."""
-    user_state = UserState()
+    """Main authentication page with login form."""
+    # ✅ CHANGED: Use AuthManager for auth check
+    auth_manager = get_auth_manager()
 
-    # ✅ SIMPLE: Just check if authenticated
-    if user_state.is_authenticated():
-        # User sudah login, redirect
-        st.info("🔄 Already logged in, redirecting...")
-        st.rerun()
+    # Check if already authenticated (with auto-restore from cookies)
+    if auth_manager.is_authenticated():
+        # User is logged in, redirect to dashboard
+        st.switch_page("pages/dashboard/pg_dashboard.py")
         return
 
     # Show login form
+    st.title("Simple ETL Dashboard")
+    st.markdown("---")
+
     render_login_form()
 
-    # Login help (static content)
-    with st.expander("💡 Bantuan Login"):
-        st.info(
-            """
-            **Kredensial Default:**
-            - Username: `admin`
-            - Password: `admin123`
+    # Optional: Show debug info in development
+    if st.checkbox("Show Debug Info", key="auth_debug"):
+        st.json(auth_manager.get_session_info())
 
-            **Catatan:**
-            - Akun admin dibuat otomatis saat aplikasi pertama kali dijalankan
-            - Hubungi administrator jika mengalama masalah login
-            """
-        )
+
+# TODO: Add forgot password functionality
+# PINNED: Consider adding registration form for new users
+# REMINDER: This page handles authentication only, dashboard logic is separate
