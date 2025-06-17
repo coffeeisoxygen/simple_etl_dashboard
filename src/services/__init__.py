@@ -12,6 +12,12 @@ from .seed_service import (
     seed_admin_user,
     seed_all,
 )
+from .user_state import (
+    UserState,
+    require_active,
+    require_admin,
+    require_auth,
+)
 
 __all__ = [
     # Auth service
@@ -24,4 +30,9 @@ __all__ = [
     "seed_admin_user",
     "seed_all",
     "reset_and_seed",
+    # User state
+    "UserState",
+    "require_auth",
+    "require_admin",
+    "require_active",
 ]

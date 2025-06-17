@@ -58,7 +58,7 @@ class StreamlitSQLManager:
             logger.warning(f"Could not create data directory: {e}")
             # NOTE: If this fails, SQLite connection will fail anyway
 
-    def get_connection(self) -> st.connections.SQLConnection:
+    def get_connection(self) -> st.connections.SQLConnection:  # type: ignore
         """Get Streamlit SQL connection with error handling.
 
         Returns:
@@ -153,7 +153,7 @@ class StreamlitSQLManager:
             conn = self.get_connection()
             db_url = str(conn.engine.url)
 
-            health_info = {
+            health_info: dict[str, Any] = {
                 "status": "healthy",
                 "connection": "ok",
                 "database_url": db_url,
@@ -163,15 +163,14 @@ class StreamlitSQLManager:
             # Add file info for SQLite
             if SQLITE_URL_PREFIX in db_url:
                 db_path = Path(db_url.replace(SQLITE_URL_PREFIX, ""))
-                health_info.update(
-                    {
-                        "file_exists": db_path.exists(),
-                        "file_path": str(db_path.resolve()),
-                        "file_size_mb": round(db_path.stat().st_size / 1024 / 1024, 2)
-                        if db_path.exists()
-                        else 0,
-                    }
-                )
+                file_info: dict[str, Any] = {
+                    "file_exists": db_path.exists(),
+                    "file_path": str(db_path.resolve()),
+                    "file_size_mb": round(db_path.stat().st_size / 1024 / 1024, 2)
+                    if db_path.exists()
+                    else 0,
+                }
+                health_info.update(file_info)
 
             return health_info
 

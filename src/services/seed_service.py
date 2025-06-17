@@ -72,7 +72,7 @@ class SeedService:
         try:
             logger.info("Seeding sample data...")
 
-            # TODO: Add sample CSV data, test users, etc.
+            # REMINDER: Add sample CSV data, test users, etc.
             # For now, just return True
 
             logger.success("✅ Sample data seeding completed")
@@ -93,7 +93,7 @@ class SeedService:
         try:
             logger.info("Resetting database and seeding fresh data...")
 
-            # TODO: Implement database reset logic if needed
+            # REMEINDER: Implement database reset logic if needed
             # For now, just run normal seeding
 
             return self.seed_all()

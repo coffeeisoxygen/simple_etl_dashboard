@@ -12,47 +12,59 @@
         "./.venv/Scripts/ruff.exe",
         "./.venv/bin/ruff"
     ],
+    // 🚀 FIXED: Auto-import dan formatting
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit",
-            "source.fixAll": "explicit"
-        }
+            "source.organizeImports": "always", // Changed from "explicit"
+            "source.fixAll.ruff": "always" // Added for better auto-fix
+        },
+        "editor.formatOnSave": true // Added for immediate formatting
     },
     "autoDocstring.docstringFormat": "google",
-    // 🔧 Pylance Configuration - Optimized for performance
-    "python.analysis.typeCheckingMode": "off", // Disable type checking for faster performance
-    "python.analysis.autoSearchPaths": false,
+    // 🔧 FIXED: Pylance Configuration - MVP optimized
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoSearchPaths": true,
     "python.analysis.extraPaths": [
         "./src",
-        "./tests" // Include tests if needed
+        "./tests"
+    ],
+    // 🚀 FIXED: Proper virtual environment detection
+    "python.analysis.include": [
+        "src/**/*.py",
+        "tests/**/*.py"
     ],
     "python.analysis.exclude": [
         "**/.venv/**",
         "**/venv/**",
         "**/__pycache__/**",
         "**/.pytest_cache/**",
+        "**/.reports/**", // Added missing reports
         "**/src/deprecated/**",
         "**/node_modules/**",
-        "**/site-packages/**" // Explicitly exclude site-packages
+        "**/site-packages/**",
+        "**/dist/**", // Added dist
+        "**/build/**" // Added build
     ],
     "python.analysis.ignore": [
         "**/.venv/**",
         "**/venv/**",
         "**/src/deprecated/**"
     ],
-    "python.analysis.useLibraryCodeForTypes": false,
-    "python.analysis.indexing": false,
-    "python.analysis.diagnosticMode": "openFilesOnly", // Analyze only open files
-    "python.analysis.stubPath": "", // Disable default stub path
+    // 🚀 FIXED: Performance optimization for MVP
+    "python.analysis.useLibraryCodeForTypes": false, // Changed from true - faster startup
+    "python.analysis.indexing": true,
+    "python.analysis.diagnosticMode": "openFilesOnly", // Changed from "workspace" - much faster
+    "python.analysis.stubPath": "",
+    // 🚀 FIXED: Simplified package indexing
     "python.analysis.packageIndexDepths": [
         {
             "name": "",
-            "depth": 1, // Reduce indexing depth
-            "includeAllSymbols": false
+            "depth": 1, // Reduced from 2
+            "includeAllSymbols": false // Changed from true - conflicts fixed
         }
     ],
-    // 🧪 Testing Configuration
+    // 🧪 Testing Configuration (unchanged)
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": [

@@ -66,7 +66,13 @@ def login(data: LoginRequest, repo: IUserRepository) -> LoginResponse:
     ):
         raise ValueError("Login gagal")
 
-    return LoginResponse.model_validate(user)
+    return LoginResponse(
+        id=user.id,
+        username=user.username,
+        name=user.name,
+        is_admin=user.is_admin,
+        is_active=user.is_active,
+    )
 
 
 def register(data: RegisterUserRequest, repo: IUserRepository) -> None:

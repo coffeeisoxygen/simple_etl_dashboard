@@ -7,6 +7,8 @@ class LoginResponse(BaseModel):
     id: int
     username: str
     name: str
+    is_admin: bool
+    is_active: bool
 
 
 class RegisterResponse(BaseModel):

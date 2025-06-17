@@ -12,6 +12,4 @@ __all__ = [
     "Base",
     "User",
 ]
-
-# TODO: Add other models here as they are created (ETL jobs, data sources, etc.)
-# REMINDER: Keep this file updated when adding new models
+# NOTE : additional models can be imported here as needed
